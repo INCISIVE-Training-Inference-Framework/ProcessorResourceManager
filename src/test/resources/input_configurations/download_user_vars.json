@@ -1,0 +1,9 @@
+{
+  "actions": [
+    {
+      "name": "download_user_vars",
+      "user_vars_url": "http://localhost:8000/api/some_url/",
+      "output_path": "src/test/resources/tmp_download_user_vars_tests/test/user_vars.json"
+    }
+  ]
+}

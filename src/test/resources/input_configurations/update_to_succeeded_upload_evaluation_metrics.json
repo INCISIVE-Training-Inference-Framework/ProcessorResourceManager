@@ -1,0 +1,30 @@
+{
+  "actions": [
+    {
+      "name": "update_to_succeeded",
+      "update_status_url": "http://localhost:8000/api/update_status/",
+      "upload_ai_model": true,
+      "upload_evaluation_metrics": true,
+      "upload_generic_file": false,
+
+      "ai_model_upload_url": "http://localhost:8000/api/upload_ai_model/",
+      "ai_model_delete_url": "http://localhost:8000/api/delete_ai_model/",
+      "ai_model_upload_path": "src/test/resources/tmp_update_to_succeeded_tests/dummy_ai_model/",
+      "ai_model_user_vars_path": "src/test/resources/tmp_update_to_succeeded_tests/dummy_user_vars.json",
+      "ai_model_upload_metadata": {
+        "ai_engine_version": 1,
+        "name": "test",
+        "data_partners_patients": {},
+        "description": "dummy description",
+        "merge_type": "default"
+      },
+
+      "evaluation_metrics_upload_url": "http://localhost:8000/api/upload_evaluation_metric/",
+      "evaluation_metrics_delete_url": "http://localhost:8000/api/delete_evaluation_metric/",
+      "evaluation_metrics_upload_path": "src/test/resources/tmp_update_to_succeeded_tests/dummy_evaluation_metrics.json",
+      "evaluation_metrics_upload_metadata": {
+        "data_partners_patients": {}
+      }
+    }
+  ]
+}

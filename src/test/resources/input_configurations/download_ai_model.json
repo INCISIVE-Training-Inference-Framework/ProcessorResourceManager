@@ -1,0 +1,9 @@
+{
+  "actions": [
+    {
+      "name": "download_ai_model",
+      "ai_model_url": "http://localhost:8000/api/some_url/",
+      "output_path": "src/test/resources/tmp_download_ai_model_tests/test/"
+    }
+  ]
+}

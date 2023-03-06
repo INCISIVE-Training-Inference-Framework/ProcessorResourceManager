@@ -1,0 +1,8 @@
+{
+  "actions": [
+    {
+      "name": "update_to_running",
+      "update_status_url": "http://localhost:8000/api/some_url/"
+    }
+  ]
+}

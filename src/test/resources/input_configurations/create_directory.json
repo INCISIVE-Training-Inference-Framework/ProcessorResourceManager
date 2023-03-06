@@ -1,0 +1,8 @@
+{
+  "actions": [
+    {
+      "name": "create_directory",
+      "directory_path": "src/test/resources/tmp_create_directory_tests/test/some_dir_1/some_dir_2"
+    }
+  ]
+}

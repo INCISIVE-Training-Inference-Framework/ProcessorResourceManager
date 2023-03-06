@@ -1,0 +1,15 @@
+{
+  "actions": [
+    {
+      "name": "run_ai_engine",
+      "use_case": "training_from_scratch",
+      "max_iteration_time": 30,
+      "max_initialization_time": 2,
+      "client_host": "127.0.0.1:8001",
+      "server_host": "127.0.0.1:8000",
+      "ping_url": "/api/ping",
+      "run_url": "/api/run",
+      "callback_url": "/api/callback"
+    }
+  ]
+}
