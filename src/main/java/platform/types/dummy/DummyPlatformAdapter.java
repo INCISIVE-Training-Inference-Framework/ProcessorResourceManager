@@ -32,7 +32,7 @@ public class DummyPlatformAdapter implements PlatformAdapter {
     public void updateToRunning(ActionUpdateToRunning action) throws InternalException {}
 
     @Override
-    public void updateToFailed(ActionUpdateToFailed action, String message) throws InternalException {}
+    public void updateToFailed(ActionUpdateToFailed action) throws InternalException {}
 
     @Override
     public void updateToSucceeded(ActionUpdateToSucceeded action) throws InternalException {}

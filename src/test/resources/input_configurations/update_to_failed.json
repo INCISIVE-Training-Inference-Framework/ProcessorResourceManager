@@ -2,7 +2,8 @@
   "actions": [
     {
       "name": "update_to_failed",
-      "update_status_url": "http://localhost:8000/api/some_url/"
+      "update_status_url": "http://localhost:8000/api/some_url/",
+      "message": "error message"
     }
   ]
 }

@@ -30,6 +30,7 @@ public class Domain {
             else if (action instanceof ActionRunAIEngine) this.platform.runAIEngine((ActionRunAIEngine) action);
             else if (action instanceof ActionUpdateToRunning) this.platform.updateToRunning((ActionUpdateToRunning) action);
             else if (action instanceof ActionUpdateToSucceeded) this.platform.updateToSucceeded((ActionUpdateToSucceeded) action);
+            else if (action instanceof ActionUpdateToFailed) this.platform.updateToFailed((ActionUpdateToFailed) action);
             else throw new InternalException(String.format("Action \"%s\" not implemented", action.getClass().getSimpleName()), null);
 
         }

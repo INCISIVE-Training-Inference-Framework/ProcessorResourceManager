@@ -19,7 +19,7 @@ public interface PlatformAdapter {
 
     void updateToRunning(ActionUpdateToRunning action) throws InternalException;
 
-    void updateToFailed(ActionUpdateToFailed action, String message) throws InternalException;
+    void updateToFailed(ActionUpdateToFailed action) throws InternalException;
 
     void updateToSucceeded(ActionUpdateToSucceeded action) throws InternalException;
 

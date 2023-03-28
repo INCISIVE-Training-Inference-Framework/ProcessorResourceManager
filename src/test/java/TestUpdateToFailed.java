@@ -75,7 +75,7 @@ public class TestUpdateToFailed {
                 .withMultipartRequestBody(
                         aMultipart()
                                 .withName("data")
-                                .withBody(equalToJson("{\"message\": \"Some error message\"}"))
+                                .withBody(equalToJson("{\"message\": \"error message\"}"))
                 )
                 .willReturn(aResponse().withStatus(200).withBody("{}")));
 
@@ -85,7 +85,7 @@ public class TestUpdateToFailed {
         List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
         Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
         PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-        platformAdapter.updateToFailed((ActionUpdateToFailed) actions.get(0), "Some error message");
+        platformAdapter.updateToFailed((ActionUpdateToFailed) actions.get(0));
     }
 
 
@@ -97,7 +97,7 @@ public class TestUpdateToFailed {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            platformAdapter.updateToFailed((ActionUpdateToFailed) actions.get(0), "Some error message");
+            platformAdapter.updateToFailed((ActionUpdateToFailed) actions.get(0));
         });
 
         String expectedMessage = "Internal exception: Error while updating status to failed. Wrong response status code. Expected: [200]. Actual: 404. Not Found";
@@ -120,7 +120,7 @@ public class TestUpdateToFailed {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            platformAdapter.updateToFailed((ActionUpdateToFailed) actions.get(0), "Some error message");
+            platformAdapter.updateToFailed((ActionUpdateToFailed) actions.get(0));
         });
 
         String expectedMessage = "Bad input parameters exception: Action update to failed is bad formatted: JSONObject[\"update_status_url\"] not found.";

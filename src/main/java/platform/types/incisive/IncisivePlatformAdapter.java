@@ -114,9 +114,9 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
     }
 
     @Override
-    public void updateToFailed(ActionUpdateToFailed action, String message) throws InternalException {
+    public void updateToFailed(ActionUpdateToFailed action) throws InternalException {
         JSONObject entity = new JSONObject();
-        entity.put("message", message);
+        entity.put("message", action.getMessage());
         Set<Integer> expectedStatusCode = new HashSet<>();
         expectedStatusCode.add(200);
         patchMultipartMethod(

@@ -56,18 +56,24 @@ public class Application {
 
             // run actions when failed
             try {
+
+                // contact external endpoint if required
                 if (parsedArgs.get("failure_endpoint") != null) {
                     logger.error("Running failure actions. Updating to failed");
-                    ActionUpdateToFailed actionUpdateToFailed = new ActionUpdateToFailed(
-                            "update_to_failed",
-                            (String) parsedArgs.get("failure_endpoint")
-                    );
+
                     String errorMessage = e.getMessage();
                     if (e.getException() != null) {
                         errorMessage += ". " + e.getException().getMessage();
                     }
-                    platformAdapter.updateToFailed(actionUpdateToFailed, errorMessage);
+
+                    ActionUpdateToFailed actionUpdateToFailed = new ActionUpdateToFailed(
+                            "update_to_failed",
+                            (String) parsedArgs.get("failure_endpoint"),
+                            errorMessage
+                    );
+                    platformAdapter.updateToFailed(actionUpdateToFailed);
                 }
+
             } catch (InternalException e2) {
                 e2.print(logger);
             }
