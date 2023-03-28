@@ -14,6 +14,10 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import platform.PlatformAdapter;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -57,14 +61,14 @@ public class Application {
             // run actions when failed
             try {
 
+                String errorMessage = e.getMessage();
+                if (e.getException() != null) {
+                    errorMessage += ". " + e.getException().getMessage();
+                }
+
                 // contact external endpoint if required
                 if (parsedArgs.get("failure_endpoint") != null) {
                     logger.error("Running failure actions. Updating to failed");
-
-                    String errorMessage = e.getMessage();
-                    if (e.getException() != null) {
-                        errorMessage += ". " + e.getException().getMessage();
-                    }
 
                     ActionUpdateToFailed actionUpdateToFailed = new ActionUpdateToFailed(
                             "update_to_failed",
@@ -74,8 +78,16 @@ public class Application {
                     platformAdapter.updateToFailed(actionUpdateToFailed);
                 }
 
+                // extract error message to file
+                Path path = Paths.get("error_message.txt");
+                byte[] strToBytes = errorMessage.getBytes();
+                Files.write(path, strToBytes);
+
             } catch (InternalException e2) {
                 e2.print(logger);
+            } catch (IOException e3) {
+                logger.error(e3.getMessage());
+                e3.printStackTrace();
             }
 
             System.exit(1);
