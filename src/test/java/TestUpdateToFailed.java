@@ -81,11 +81,7 @@ public class TestUpdateToFailed {
 
         // run domain
         String[] args = {updateToFailedActionString};
-        Namespace parsedArgs = Application.parseInputArgs(args);
-        List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
-        Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
-        PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-        platformAdapter.updateToFailed((ActionUpdateToFailed) actions.get(0));
+        Application.main(args);
     }
 
 
