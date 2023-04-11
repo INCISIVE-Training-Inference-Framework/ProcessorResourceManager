@@ -2,7 +2,6 @@ package platform.types.incisive;
 
 import config.actions.*;
 import config.environment.EnvironmentVariable;
-import config.environment.EnvironmentVariableType;
 import exceptions.InternalException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +12,6 @@ import platform.PlatformAdapter;
 import utils.ZipCompression;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -189,7 +187,8 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
                     JSONObject evaluationMetric = evaluationMetricsArray.getJSONObject(i);
 
                     JSONObject evaluationMetricEntity = new JSONObject(action.getEvaluationMetricUploadMetadata().toString());
-                    evaluationMetricEntity.put("ai_model", entity.getJSONObject("ai_model").getInt("ai_model"));
+                    if (action.isUploadAIModel()) evaluationMetricEntity.put("ai_model", entity.getJSONObject("ai_model").getInt("ai_model"));
+                    else evaluationMetricEntity.put("ai_model", action.getEvaluationMetricAIModel());
                     evaluationMetricEntity.put("name", evaluationMetric.get("name"));
                     evaluationMetricEntity.put("value", evaluationMetric.get("value"));
                     if (evaluationMetric.has("description")) evaluationMetricEntity.put("description", evaluationMetric.getString("description"));

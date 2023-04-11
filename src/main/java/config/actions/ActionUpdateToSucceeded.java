@@ -18,6 +18,7 @@ public class ActionUpdateToSucceeded extends Action {
     private final String aiModelUserVarsPath;
     private final JSONObject aiModelUploadMetadata;
 
+    private final Integer evaluationMetricAIModel;
     private final String evaluationMetricUploadUrl;
     private final String evaluationMetricDeleteUrl;
     private final String evaluationMetricsUploadPath;
@@ -39,6 +40,7 @@ public class ActionUpdateToSucceeded extends Action {
             String aiModelUploadPath,
             String aiModelUserVarsPath,
             JSONObject aiModelUploadMetadata,
+            Integer evaluationMetricAIModel,
             String evaluationMetricUploadUrl,
             String evaluationMetricDeleteUrl,
             String evaluationMetricsUploadPath,
@@ -58,6 +60,7 @@ public class ActionUpdateToSucceeded extends Action {
         this.aiModelUploadPath = aiModelUploadPath;
         this.aiModelUserVarsPath = aiModelUserVarsPath;
         this.aiModelUploadMetadata = aiModelUploadMetadata;
+        this.evaluationMetricAIModel = evaluationMetricAIModel;
         this.evaluationMetricUploadUrl = evaluationMetricUploadUrl;
         this.evaluationMetricDeleteUrl = evaluationMetricDeleteUrl;
         this.evaluationMetricsUploadPath = evaluationMetricsUploadPath;
@@ -104,6 +107,10 @@ public class ActionUpdateToSucceeded extends Action {
         return aiModelUploadMetadata;
     }
 
+    public Integer getEvaluationMetricAIModel() {
+        return evaluationMetricAIModel;
+    }
+
     public String getEvaluationMetricUploadUrl() {
         return evaluationMetricUploadUrl;
     }
@@ -148,6 +155,7 @@ public class ActionUpdateToSucceeded extends Action {
                 ", aiModelUploadPath='" + aiModelUploadPath + '\'' +
                 ", aiModelUserVarsPath='" + aiModelUserVarsPath + '\'' +
                 ", aiModelUploadMetadata=" + aiModelUploadMetadata +
+                ", evaluationMetricAIModel=" + evaluationMetricAIModel +
                 ", evaluationMetricUploadUrl='" + evaluationMetricUploadUrl + '\'' +
                 ", evaluationMetricDeleteUrl='" + evaluationMetricDeleteUrl + '\'' +
                 ", evaluationMetricsUploadPath='" + evaluationMetricsUploadPath + '\'' +
@@ -166,14 +174,12 @@ public class ActionUpdateToSucceeded extends Action {
             boolean uploadAIModel = inputJson.getBoolean("upload_ai_model");
             boolean uploadEvaluationMetrics = inputJson.getBoolean("upload_evaluation_metrics");
             boolean uploadGenericFile = inputJson.getBoolean("upload_generic_file");
-            if (uploadEvaluationMetrics && !uploadAIModel) throw new BadInputParametersException(
-                    "It is not possible to upload evaluation metrics without uploading as well an AI Model"
-            );
             String aiModelUploadUrl = null;
             String aiModelDeleteUrl = null;
             String aiModelUploadPath = null;
             String aiModelUserVarsPath = null;
             JSONObject aiModelUploadMetadata = null;
+            Integer evaluationMetricAIModel = null;
             String evaluationMetricUploadUrl = null;
             String evaluationMetricDeleteUrl = null;
             String evaluationMetricsUploadPath = null;
@@ -190,6 +196,9 @@ public class ActionUpdateToSucceeded extends Action {
                 aiModelUploadMetadata = inputJson.getJSONObject("ai_model_upload_metadata");
             }
             if (uploadEvaluationMetrics) {
+                if (!uploadAIModel) {
+                    evaluationMetricAIModel = inputJson.getInt("evaluation_metrics_ai_model");
+                }
                 evaluationMetricUploadUrl = inputJson.getString("evaluation_metrics_upload_url");
                 evaluationMetricDeleteUrl = inputJson.getString("evaluation_metrics_delete_url");
                 evaluationMetricsUploadPath = inputJson.getString("evaluation_metrics_upload_path");
@@ -212,6 +221,7 @@ public class ActionUpdateToSucceeded extends Action {
                     aiModelUploadPath,
                     aiModelUserVarsPath,
                     aiModelUploadMetadata,
+                    evaluationMetricAIModel,
                     evaluationMetricUploadUrl,
                     evaluationMetricDeleteUrl,
                     evaluationMetricsUploadPath,

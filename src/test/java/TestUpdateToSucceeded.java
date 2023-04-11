@@ -1,6 +1,5 @@
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import config.actions.Action;
-import config.actions.ActionUpdateToSucceeded;
 import exceptions.BadInputParametersException;
 import exceptions.InternalException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -153,6 +152,61 @@ public class TestUpdateToSucceeded {
         // load default input json
         String updateToSucceededActionString = new String(Files.readAllBytes(Paths.get(
                 "src/test/resources/input_configurations/update_to_succeeded_upload_evaluation_metrics.json"
+        )));
+
+        // create mock
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 2,
+                            "name": "accuracy",
+                            "data_partners_patients": {},
+                            "value": 0,
+                            "description": "dummy description"
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 3}")));
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 2,
+                            "name": "f1-score",
+                            "data_partners_patients": {},
+                            "value": 0
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 4}")));
+        stubFor(patch(urlEqualTo("/api/update_status/"))
+                .withMultipartRequestBody(
+                        aMultipart()
+                                .withName("data")
+                                .withBody(equalToJson(
+                                        """
+                                        {
+                                            "evaluation_metrics": [
+                                                {"evaluation_metric": 3},
+                                                {"evaluation_metric": 4}
+                                            ]
+                                        }
+                                        """
+                                ))
+                )
+                .willReturn(aResponse().withStatus(200).withBody("{}")));
+
+        // run domain
+        String[] args = {updateToSucceededActionString};
+        Application.main(args);
+    }
+
+    @Test
+    public void updateToSucceededUploadAIModelAlongEvaluationMetricsSuccess() throws Exception {
+        // load default input json
+        String updateToSucceededActionString = new String(Files.readAllBytes(Paths.get(
+                "src/test/resources/input_configurations/update_to_succeeded_upload_ai_model_along_evaluation_metrics.json"
         )));
 
         // create mock
@@ -332,10 +386,10 @@ public class TestUpdateToSucceeded {
     }
 
     @Test
-    public void updateToSucceededUploadEvaluationMetricsFailed() throws Exception {
+    public void updateToSucceededUploadAIModelAlongEvaluationMetricsFailed() throws Exception {
         // load default input json
         String updateToSucceededActionString = new String(Files.readAllBytes(Paths.get(
-                "src/test/resources/input_configurations/update_to_succeeded_upload_evaluation_metrics.json"
+                "src/test/resources/input_configurations/update_to_succeeded_upload_ai_model_along_evaluation_metrics.json"
         )));
 
         // create mock

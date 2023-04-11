@@ -1,6 +1,7 @@
 # Other
 .idea/
 target/
+error_message.txt
 
 # Compiled class file
 *.class
