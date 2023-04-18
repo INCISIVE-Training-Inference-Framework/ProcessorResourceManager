@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "name": "update_to_succeeded",
+      "update_status_url": "http://localhost:8000/api/update_status/",
+      "upload_ai_model": false,
+      "upload_evaluation_metrics": true,
+      "upload_generic_file": false,
+
+      "evaluation_metrics_multiple": true,
+      "evaluation_metrics_ai_model": 3,
+      "evaluation_metrics_upload_url": "http://localhost:8000/api/upload_evaluation_metric/",
+      "evaluation_metrics_delete_url": "http://localhost:8000/api/delete_evaluation_metric/",
+      "evaluation_metrics_upload_path": "src/test/resources/tmp_update_to_succeeded_tests/evaluation_metrics/",
+      "evaluation_metrics_upload_metadata": {}
+    }
+  ]
+}

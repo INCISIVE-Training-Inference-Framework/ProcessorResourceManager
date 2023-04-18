@@ -16,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static utils.FileMethods.readJson;
 import static utils.HttpMethods.*;
@@ -177,21 +179,47 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
 
             if (action.isUploadEvaluationMetrics()) {
                 logger.debug("Uploading Evaluation Metrics");
-                JSONArray outputEvaluationMetricsArray = new JSONArray();
-                JSONObject evaluationMetricsGeneral;
-                try (InputStream inputStream = new FileInputStream(action.getEvaluationMetricsUploadPath())) {
-                    evaluationMetricsGeneral = readJson(inputStream);
-                }
-                JSONArray evaluationMetricsArray = evaluationMetricsGeneral.getJSONArray("evaluation_metrics");
-                for (int i = 0; i < evaluationMetricsArray.length(); i++) {
-                    JSONObject evaluationMetric = evaluationMetricsArray.getJSONObject(i);
 
+                JSONArray outputEvaluationMetricsArray = new JSONArray();
+                JSONArray evaluationMetricsArray = new JSONArray();
+                JSONObject evaluationMetricsGeneral;
+
+                if (action.isEvaluationMetricMultiple()) {
+                    List<Path> result;
+                    try (Stream<Path> walk = Files.walk(Paths.get(action.getEvaluationMetricsUploadPath()))) {
+                        result = walk
+                                .filter(Files::isReadable)
+                                .filter(Files::isRegularFile)
+                                .filter(file -> file.getFileName().toString().endsWith(".json"))
+                                .collect(Collectors.toList());
+                        for (Path path : result) {
+                            try (InputStream inputStream = new FileInputStream(path.toFile())) {
+                                evaluationMetricsGeneral = readJson(inputStream);
+                                JSONArray evaluationMetricsArrayTemp = evaluationMetricsGeneral.getJSONArray("evaluation_metrics");
+                                JSONObject dataPartnersPatients = new JSONObject(String.format("{\"%s\": [\"null\"]}", path.getFileName().toString().replaceAll(".json", "")));
+                                for (Object item: evaluationMetricsArrayTemp) {
+                                    JSONObject itemJson = (JSONObject) item;
+                                    itemJson.put("data_partners_patients", dataPartnersPatients);
+                                    evaluationMetricsArray.put(itemJson);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    try (InputStream inputStream = new FileInputStream(action.getEvaluationMetricsUploadPath())) {
+                        evaluationMetricsGeneral = readJson(inputStream);
+                    }
+                    evaluationMetricsArray = evaluationMetricsGeneral.getJSONArray("evaluation_metrics");
+                }
+                for (int i = 0; i < evaluationMetricsArray.length(); i++) {
                     JSONObject evaluationMetricEntity = new JSONObject(action.getEvaluationMetricUploadMetadata().toString());
                     if (action.isUploadAIModel()) evaluationMetricEntity.put("ai_model", entity.getJSONObject("ai_model").getInt("ai_model"));
                     else evaluationMetricEntity.put("ai_model", action.getEvaluationMetricAIModel());
+                    JSONObject evaluationMetric = evaluationMetricsArray.getJSONObject(i);
                     evaluationMetricEntity.put("name", evaluationMetric.get("name"));
                     evaluationMetricEntity.put("value", evaluationMetric.get("value"));
                     if (evaluationMetric.has("description")) evaluationMetricEntity.put("description", evaluationMetric.getString("description"));
+                    if (evaluationMetric.has("data_partners_patients")) evaluationMetricEntity.put("data_partners_patients", evaluationMetric.getJSONObject("data_partners_patients"));
 
                     Set<Integer> expectedStatusCode = new HashSet<>();
                     expectedStatusCode.add(200);

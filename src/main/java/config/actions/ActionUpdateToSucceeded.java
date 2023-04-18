@@ -18,6 +18,7 @@ public class ActionUpdateToSucceeded extends Action {
     private final String aiModelUserVarsPath;
     private final JSONObject aiModelUploadMetadata;
 
+    private final Boolean evaluationMetricMultiple;
     private final Integer evaluationMetricAIModel;
     private final String evaluationMetricUploadUrl;
     private final String evaluationMetricDeleteUrl;
@@ -40,6 +41,7 @@ public class ActionUpdateToSucceeded extends Action {
             String aiModelUploadPath,
             String aiModelUserVarsPath,
             JSONObject aiModelUploadMetadata,
+            Boolean evaluationMetricMultiple,
             Integer evaluationMetricAIModel,
             String evaluationMetricUploadUrl,
             String evaluationMetricDeleteUrl,
@@ -60,6 +62,7 @@ public class ActionUpdateToSucceeded extends Action {
         this.aiModelUploadPath = aiModelUploadPath;
         this.aiModelUserVarsPath = aiModelUserVarsPath;
         this.aiModelUploadMetadata = aiModelUploadMetadata;
+        this.evaluationMetricMultiple = evaluationMetricMultiple;
         this.evaluationMetricAIModel = evaluationMetricAIModel;
         this.evaluationMetricUploadUrl = evaluationMetricUploadUrl;
         this.evaluationMetricDeleteUrl = evaluationMetricDeleteUrl;
@@ -105,6 +108,10 @@ public class ActionUpdateToSucceeded extends Action {
 
     public JSONObject getAiModelUploadMetadata() {
         return aiModelUploadMetadata;
+    }
+
+    public boolean isEvaluationMetricMultiple() {
+        return evaluationMetricMultiple;
     }
 
     public Integer getEvaluationMetricAIModel() {
@@ -155,6 +162,7 @@ public class ActionUpdateToSucceeded extends Action {
                 ", aiModelUploadPath='" + aiModelUploadPath + '\'' +
                 ", aiModelUserVarsPath='" + aiModelUserVarsPath + '\'' +
                 ", aiModelUploadMetadata=" + aiModelUploadMetadata +
+                ", evaluationMetricMultiple=" + evaluationMetricMultiple +
                 ", evaluationMetricAIModel=" + evaluationMetricAIModel +
                 ", evaluationMetricUploadUrl='" + evaluationMetricUploadUrl + '\'' +
                 ", evaluationMetricDeleteUrl='" + evaluationMetricDeleteUrl + '\'' +
@@ -179,6 +187,7 @@ public class ActionUpdateToSucceeded extends Action {
             String aiModelUploadPath = null;
             String aiModelUserVarsPath = null;
             JSONObject aiModelUploadMetadata = null;
+            Boolean evaluationMetricMultiple = false;
             Integer evaluationMetricAIModel = null;
             String evaluationMetricUploadUrl = null;
             String evaluationMetricDeleteUrl = null;
@@ -196,6 +205,9 @@ public class ActionUpdateToSucceeded extends Action {
                 aiModelUploadMetadata = inputJson.getJSONObject("ai_model_upload_metadata");
             }
             if (uploadEvaluationMetrics) {
+                if (inputJson.has("evaluation_metrics_multiple")) {
+                    evaluationMetricMultiple = inputJson.getBoolean("evaluation_metrics_multiple");
+                }
                 if (!uploadAIModel) {
                     evaluationMetricAIModel = inputJson.getInt("evaluation_metrics_ai_model");
                 }
@@ -221,6 +233,7 @@ public class ActionUpdateToSucceeded extends Action {
                     aiModelUploadPath,
                     aiModelUserVarsPath,
                     aiModelUploadMetadata,
+                    evaluationMetricMultiple,
                     evaluationMetricAIModel,
                     evaluationMetricUploadUrl,
                     evaluationMetricDeleteUrl,

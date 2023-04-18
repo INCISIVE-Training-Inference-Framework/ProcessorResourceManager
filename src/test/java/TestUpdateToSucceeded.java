@@ -59,7 +59,6 @@ public class TestUpdateToSucceeded {
         try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "dummy_evaluation_metrics.json", StandardCharsets.UTF_8)) {
             evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
         }
-        //evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
 
         // create dummy Generic File
         Files.createDirectory(Paths.get(testsRootDirectory + "dummy_generic_file"));
@@ -203,6 +202,95 @@ public class TestUpdateToSucceeded {
     }
 
     @Test
+    public void updateToSucceededUploadEvaluationMetricsMultipleSuccess() throws Exception {
+        // load default input json
+        String updateToSucceededActionString = new String(Files.readAllBytes(Paths.get(
+                "src/test/resources/input_configurations/update_to_succeeded_upload_evaluation_metrics_multiple.json"
+        )));
+
+        // create dummy Evaluation Metrics
+        Files.createDirectory(Paths.get(testsRootDirectory + "/evaluation_metrics/"));
+        JSONObject evaluationMetric1 = new JSONObject("{\"name\": \"accuracy\", \"value\": 0, \"description\": \"dummy description\"}");
+        JSONObject evaluationMetric2 = new JSONObject("{\"name\": \"f1-score\", \"value\": 0}");
+        JSONObject evaluationMetric3 = new JSONObject("{\"name\": \"f2-score\", \"value\": 0}");
+        JSONArray evaluationMetricsArray = new JSONArray();
+        evaluationMetricsArray.put(evaluationMetric1);
+        evaluationMetricsArray.put(evaluationMetric2);
+        JSONObject evaluationMetricsJson = new JSONObject();
+        evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-1.json", StandardCharsets.UTF_8)) {
+            evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
+        }
+        evaluationMetricsArray = new JSONArray();
+        evaluationMetricsArray.put(evaluationMetric3);
+        evaluationMetricsJson = new JSONObject();
+        evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-2.json", StandardCharsets.UTF_8)) {
+            evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
+        }
+
+        // create mock
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 3,
+                            "name": "accuracy",
+                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "value": 0,
+                            "description": "dummy description"
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 3}")));
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 3,
+                            "name": "f1-score",
+                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "value": 0
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 4}")));
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 3,
+                            "name": "f2-score",
+                            "data_partners_patients": {"data-partner-2": ["null"]},
+                            "value": 0
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 5}")));
+        stubFor(patch(urlEqualTo("/api/update_status/"))
+                .withMultipartRequestBody(
+                        aMultipart()
+                                .withName("data")
+                                .withBody(equalToJson(
+                                        """
+                                        {
+                                            "evaluation_metrics": [
+                                                {"evaluation_metric": 3},
+                                                {"evaluation_metric": 4},
+                                                {"evaluation_metric": 5}
+                                            ]
+                                        }
+                                        """
+                                ))
+                )
+                .willReturn(aResponse().withStatus(200).withBody("{}")));
+
+        // run domain
+        String[] args = {updateToSucceededActionString};
+        Application.main(args);
+    }
+
+    @Test
     public void updateToSucceededUploadAIModelAlongEvaluationMetricsSuccess() throws Exception {
         // load default input json
         String updateToSucceededActionString = new String(Files.readAllBytes(Paths.get(
@@ -275,6 +363,125 @@ public class TestUpdateToSucceeded {
                                             "evaluation_metrics": [
                                                 {"evaluation_metric": 3},
                                                 {"evaluation_metric": 4}
+                                            ]
+                                        }
+                                        """
+                                ))
+                )
+                .willReturn(aResponse().withStatus(200).withBody("{}")));
+
+        // run domain
+        String[] args = {updateToSucceededActionString};
+        Application.main(args);
+    }
+
+    @Test
+    public void updateToSucceededUploadAIModelAlongEvaluationMetricsMultipleSuccess() throws Exception {
+        // load default input json
+        String updateToSucceededActionString = new String(Files.readAllBytes(Paths.get(
+                "src/test/resources/input_configurations/update_to_succeeded_upload_ai_model_along_evaluation_metrics_multiple.json"
+        )));
+
+        // create dummy Evaluation Metrics
+        Files.createDirectory(Paths.get(testsRootDirectory + "/evaluation_metrics/"));
+        JSONObject evaluationMetric1 = new JSONObject("{\"name\": \"accuracy\", \"value\": 0, \"description\": \"dummy description\"}");
+        JSONObject evaluationMetric2 = new JSONObject("{\"name\": \"f1-score\", \"value\": 0}");
+        JSONObject evaluationMetric3 = new JSONObject("{\"name\": \"f2-score\", \"value\": 0}");
+        JSONArray evaluationMetricsArray = new JSONArray();
+        evaluationMetricsArray.put(evaluationMetric1);
+        evaluationMetricsArray.put(evaluationMetric2);
+        JSONObject evaluationMetricsJson = new JSONObject();
+        evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-1.json", StandardCharsets.UTF_8)) {
+            evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
+        }
+        evaluationMetricsArray = new JSONArray();
+        evaluationMetricsArray.put(evaluationMetric3);
+        evaluationMetricsJson = new JSONObject();
+        evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-2.json", StandardCharsets.UTF_8)) {
+            evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
+        }
+
+        // create mock
+        stubFor(post(urlEqualTo("/api/upload_ai_model/"))
+                .withMultipartRequestBody(
+                        aMultipart()
+                                .withName("data")
+                                .withBody(equalToJson(
+                                        """
+                                        {
+                                            "ai_engine_version": 1,
+                                            "name": "test",
+                                            "data_partners_patients": {},
+                                            "description": "dummy description",
+                                            "merge_type": "default"
+                                        }
+                                        """
+                                ))
+                )
+                .withMultipartRequestBody(
+                        aMultipart()
+                                .withName("ai_engine_version_user_vars")
+                                .withHeader("Content-Type", containing("application/octet-stream"))
+                )
+                .withMultipartRequestBody(
+                        aMultipart()
+                                .withName("contents")
+                                .withHeader("Content-Type", containing("application/octet-stream"))
+                )
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 1}")));
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 1,
+                            "name": "accuracy",
+                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "value": 0,
+                            "description": "dummy description"
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 3}")));
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 1,
+                            "name": "f1-score",
+                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "value": 0
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 4}")));
+        stubFor(post(urlEqualTo("/api/upload_evaluation_metric/"))
+                .withRequestBody(equalToJson(
+                        """
+                        {
+                            "ai_model": 1,
+                            "name": "f2-score",
+                            "data_partners_patients": {"data-partner-2": ["null"]},
+                            "value": 0
+                        }
+                        """
+                ))
+                .willReturn(aResponse().withStatus(200).withBody("{\"id\": 5}")));
+        stubFor(patch(urlEqualTo("/api/update_status/"))
+                .withMultipartRequestBody(
+                        aMultipart()
+                                .withName("data")
+                                .withBody(equalToJson(
+                                        """
+                                        {
+                                            "ai_model": {
+                                                "ai_model": 1
+                                            },
+                                            "evaluation_metrics": [
+                                                {"evaluation_metric": 3},
+                                                {"evaluation_metric": 4},
+                                                {"evaluation_metric": 5}
                                             ]
                                         }
                                         """
