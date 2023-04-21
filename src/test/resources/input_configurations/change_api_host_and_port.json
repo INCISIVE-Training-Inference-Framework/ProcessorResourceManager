@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "change_api_host_and_port",
+      "read_file_path": "src/test/resources/tmp_change_api_host_and_port_tests/platform_vars.json",
+      "write_file_path": "src/test/resources/tmp_change_api_host_and_port_tests/test/platform_vars.json",
+      "api_host_and_port": "127.0.0.1:8080"
+    }
+  ]
+}

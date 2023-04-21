@@ -23,4 +23,6 @@ public interface PlatformAdapter {
 
     void updateToSucceeded(ActionUpdateToSucceeded action) throws InternalException;
 
+    void changeApiPortAndHost(ActionChangeApiHostAndPort action) throws InternalException;
+
 }

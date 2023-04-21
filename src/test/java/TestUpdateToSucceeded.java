@@ -383,7 +383,7 @@ public class TestUpdateToSucceeded {
         )));
 
         // create dummy Evaluation Metrics
-        Files.createDirectory(Paths.get(testsRootDirectory + "/evaluation_metrics/"));
+        Files.createDirectories(Paths.get(testsRootDirectory + "/evaluation_metrics/"));
         JSONObject evaluationMetric1 = new JSONObject("{\"name\": \"accuracy\", \"value\": 0, \"description\": \"dummy description\"}");
         JSONObject evaluationMetric2 = new JSONObject("{\"name\": \"f1-score\", \"value\": 0}");
         JSONObject evaluationMetric3 = new JSONObject("{\"name\": \"f2-score\", \"value\": 0}");

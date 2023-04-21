@@ -57,6 +57,7 @@ public abstract class Action {
                 case "update_to_running" -> ActionUpdateToRunning.parseInputAction(inputAction);
                 case "update_to_failed" -> ActionUpdateToFailed.parseInputAction(inputAction);
                 case "update_to_succeeded" -> ActionUpdateToSucceeded.parseInputAction(inputAction);
+                case "change_api_host_and_port" -> ActionChangeApiHostAndPort.parseInputAction(inputAction);
                 default -> throw new BadInputParametersException(String.format("The action with name \"%s\" does not exist", actionName));
             };
             outputActions.add(action);
