@@ -87,16 +87,36 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
         RunAIEngine runAIEngine = new RunAIEngine(
                 action.getMaxIterationTime(),
                 action.getMaxInitializationTime(),
+                action.getMaxFinalizationTime(),
+                action.getMaxFinalizationRetries(),
                 action.getClientHost(),
                 action.getServerHost(),
                 action.getPingUrl(),
                 action.getRunUrl(),
+                action.getEndUrl(),
                 action.getCallbackUrl()
         );
-        runAIEngine.initialize();
-        runAIEngine.waitAIEngineToBeReady();
-        runAIEngine.run(action.getUseCase());
-        runAIEngine.clean();
+        boolean initialized = false;
+        boolean exceptionThrown = false;
+        try {
+            runAIEngine.initialize();
+            initialized = true;
+            runAIEngine.waitAIEngineToBeReady();
+            runAIEngine.run(action.getUseCase());
+        } catch (Exception e){
+           exceptionThrown = true;
+           throw e;
+        } finally {
+            try {
+                runAIEngine.end();
+                if (initialized) runAIEngine.clean();
+            } catch (Exception e) {
+                if (exceptionThrown) {
+                    logger.error("Intermediate exception");
+                    e.printStackTrace();
+                } else throw e;
+            }
+        }
     }
 
     @Override

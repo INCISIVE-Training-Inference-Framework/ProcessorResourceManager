@@ -5,10 +5,13 @@
       "use_case": "training_from_scratch",
       "max_iteration_time": 30,
       "max_initialization_time": 2,
+      "max_finalization_time": 5,
+      "max_finalization_retries": 3,
       "client_host": "127.0.0.1:8001",
       "server_host": "127.0.0.1:8000",
       "ping_url": "/api/ping",
       "run_url": "/api/run",
+      "end_url": "/api/end",
       "callback_url": "/api/callback"
     }
   ]
