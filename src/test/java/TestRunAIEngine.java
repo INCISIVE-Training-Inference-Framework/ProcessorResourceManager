@@ -1,3 +1,4 @@
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import config.actions.Action;
 import config.actions.ActionRunAIEngine;
@@ -12,25 +13,29 @@ import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.*;
+import org.wiremock.webhooks.Webhooks;
 import platform.PlatformAdapter;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.github.tomakehurst.wiremock.http.RequestMethod.DELETE;
 import static config.environment.EnvironmentVariable.loadEnvironmentVariables;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.wiremock.webhooks.Webhooks.webhook;
 
 // IMPORTANT -> do not run tests together, the API takes some time to free the port between requests
 
 public class TestRunAIEngine {
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(options().port(8001), false);
+    public WireMockRule wireMockRule = new WireMockRule(options().port(8001).extensions(Webhooks.class), false);
     public String runAIEngineActionString;
     public ActionRunAIEngine runAIEngineAction;
     public static String testsRootDirectory = "src/test/resources/tmp_run_ai_engine_tests/";
@@ -78,7 +83,13 @@ public class TestRunAIEngine {
     public void runAIEngineSuccess() throws Exception {
         // create mock
         stubFor(get(urlEqualTo(runAIEngineAction.getPingUrl()))
-                .willReturn(aResponse().withStatus(200)));
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER))
+        );
+        UUID stubId1 = UUID.randomUUID();
+        stubFor(get(urlEqualTo(runAIEngineAction.getPingUrl()))
+                .withId(stubId1)
+                .willReturn(aResponse().withStatus(200))
+        );
         stubFor(post(urlEqualTo(String.format(
                 "%s?use_case=%s&callback_url=%s",
                 runAIEngineAction.getRunUrl(),
@@ -89,6 +100,22 @@ public class TestRunAIEngine {
                         runAIEngineAction.getCallbackUrl()
                 )
         ))).willReturn(aResponse().withStatus(200)));
+        stubFor(post(urlEqualTo(runAIEngineAction.getEndUrl()))
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER))
+        );
+        UUID stubId2 = UUID.randomUUID();
+        stubFor(post(urlEqualTo(runAIEngineAction.getEndUrl()))
+                .withId(stubId2)
+                .willReturn(aResponse().withStatus(200))
+                        .withPostServeAction("webhook", webhook()
+                                .withMethod(DELETE)
+                                .withUrl(wireMockRule.url("/__admin/mappings/" + stubId1))
+                        )
+                        .withPostServeAction("webhook", webhook()
+                                .withMethod(DELETE)
+                                .withUrl(wireMockRule.url("/__admin/mappings/" + stubId2))
+                        )
+        );
 
         Thread thread = new Thread(() -> {
             try {
@@ -118,6 +145,7 @@ public class TestRunAIEngine {
 
     @Test
     public void runAIEngineFailedPing() throws Exception {
+
         Exception exception = assertThrows(InternalException.class, () -> {
             String[] args = {runAIEngineActionString};
             Namespace parsedArgs = Application.parseInputArgs(args);
@@ -179,6 +207,71 @@ public class TestRunAIEngine {
         });
 
         String expectedMessage = "Internal exception: Error while running use case. The end of the iteration was not notified on time";
+        assertTrue(exception.getMessage().contains(expectedMessage));
+    }
+
+    @Test
+    public void runAIEngineNotFinishFailure() throws Exception {
+        // create mock
+        stubFor(get(urlEqualTo(runAIEngineAction.getPingUrl()))
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER))
+        );
+        UUID stubId1 = UUID.randomUUID();
+        stubFor(get(urlEqualTo(runAIEngineAction.getPingUrl()))
+                .withId(stubId1)
+                .willReturn(aResponse().withStatus(200))
+        );
+        stubFor(post(urlEqualTo(String.format(
+                "%s?use_case=%s&callback_url=%s",
+                runAIEngineAction.getRunUrl(),
+                runAIEngineAction.getUseCase(),
+                String.format(
+                        "http://%s%s",
+                        runAIEngineAction.getServerHost(),
+                        runAIEngineAction.getCallbackUrl()
+                )
+        ))).willReturn(aResponse().withStatus(200)));
+        stubFor(post(urlEqualTo(runAIEngineAction.getEndUrl()))
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER))
+        );
+        UUID stubId2 = UUID.randomUUID();
+        stubFor(post(urlEqualTo(runAIEngineAction.getEndUrl()))
+                .withId(stubId2)
+                .willReturn(aResponse().withStatus(200))
+        );
+
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(4000);
+                CloseableHttpClient client = HttpClients.createDefault();
+                String callbackUrl = String.format(
+                        "http://%s%s", runAIEngineAction.getServerHost(), runAIEngineAction.getCallbackUrl()
+                );
+                HttpPost httpPost = new HttpPost(callbackUrl);
+                String json = "{\"SUCCESS\": true}";
+                StringEntity entity = new StringEntity(json);
+                httpPost.setEntity(entity);
+                httpPost.setHeader("Accept", "application/json");
+                httpPost.setHeader("Content-type", "application/json");
+                client.execute(httpPost);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+
+        // run domain
+        Exception exception = assertThrows(InternalException.class, () -> {
+            String[] args = {runAIEngineActionString};
+            Namespace parsedArgs = Application.parseInputArgs(args);
+            List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
+            Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
+            PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
+            Domain domain = new Domain(actions, platformAdapter);
+            domain.run();
+        });
+
+        String expectedMessage = "Internal exception: Error while waiting for the AI Engine to finish. It did not end before the timeout";
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
 
