@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "name": "end_ai_engine",
+      "max_finalization_time": 5,
+      "max_finalization_retries": 3,
+      "client_host": "127.0.0.1:8001",
+      "ping_url": "/api/ping",
+      "end_url": "/api/end"
+    }
+  ]
+}

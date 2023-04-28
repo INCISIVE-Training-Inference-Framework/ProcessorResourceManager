@@ -107,8 +107,8 @@ public class TestDownloadAIModel {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Error while downloading AI Model";
@@ -131,8 +131,8 @@ public class TestDownloadAIModel {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Bad input parameters exception: Action download AI Model is bad formatted: JSONObject[\"ai_model_url\"] not found.";

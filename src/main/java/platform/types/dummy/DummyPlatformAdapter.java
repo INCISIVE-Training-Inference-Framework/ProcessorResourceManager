@@ -29,6 +29,9 @@ public class DummyPlatformAdapter implements PlatformAdapter {
     public void runAIEngine(ActionRunAIEngine action) throws InternalException {}
 
     @Override
+    public void endAIEngine(ActionEndAIEngine action) throws InternalException {}
+
+    @Override
     public void updateToRunning(ActionUpdateToRunning action) throws InternalException {}
 
     @Override

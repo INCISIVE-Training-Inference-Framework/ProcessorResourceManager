@@ -95,8 +95,8 @@ public class TestChangeApiHostAndPort {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Error while loading configuration file";
@@ -115,8 +115,8 @@ public class TestChangeApiHostAndPort {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Bad input parameters exception: Action change api host and port is bad formatted: Index 1 out of bounds for length 1";

@@ -93,8 +93,8 @@ public class TestUpdateToRunning {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Internal exception: Error while updating status to running. Wrong response status code. Expected: [200]. Actual: 404. Not Found";
@@ -117,8 +117,8 @@ public class TestUpdateToRunning {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Bad input parameters exception: Action update to running is bad formatted: JSONObject[\"update_status_url\"] not found.";

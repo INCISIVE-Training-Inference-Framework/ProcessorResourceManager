@@ -17,6 +17,8 @@ public interface PlatformAdapter {
 
     void runAIEngine(ActionRunAIEngine action) throws InternalException;
 
+    void endAIEngine(ActionEndAIEngine action) throws InternalException;
+
     void updateToRunning(ActionUpdateToRunning action) throws InternalException;
 
     void updateToFailed(ActionUpdateToFailed action) throws InternalException;

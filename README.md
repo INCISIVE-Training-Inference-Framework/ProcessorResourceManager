@@ -33,13 +33,10 @@ On the other hand, as another example, the action to run an AI Engine looks as f
   "use_case": "training_from_scratch",
   "max_iteration_time": 30,
   "max_initialization_time": 2,
-  "max_finalization_time": 5,
-  "max_finalization_retries": 3,
   "client_host": "127.0.0.1:8001",
   "server_host": "127.0.0.1:8000",
   "ping_url": "/api/ping",
   "run_url": "/api/run",
-  "end_url": "/api/end",
   "callback_url": "/api/callback"
 }
 ```
@@ -57,13 +54,10 @@ In the case, that we would like to run both actions, we should provide the follo
       "use_case": "training_from_scratch",
       "max_iteration_time": 30,
       "max_initialization_time": 2,
-      "max_finalization_time": 5,
-      "max_finalization_retries": 3,
       "client_host": "127.0.0.1:8001",
       "server_host": "127.0.0.1:8000",
       "ping_url": "/api/ping",
       "run_url": "/api/run",
-      "end_url": "/api/end",
       "callback_url": "/api/callback"
     }
   ]
@@ -78,4 +72,9 @@ docker run -it processor-resource-manager '{ "actions": [ { "name": "create_dire
 As an optional parameter, there is the possibility to provide a URL of an API. The component will hit this URL in case of an error. The correct way to provide this optional parameter is as follows:
 ```
 docker run -it processor-resource-manager '[...]' --failure-endpoint http://HOSTNAME:PORT/PATH_TO_HIT_IN_CASE_OF_ERROR
+```
+
+As an optional parameter, there is the possibility to provide additional actions to be run when an error occurs. The correct way to provide this optional parameter is as follows:
+```
+docker run -it processor-resource-manager '[...]' --failure-actions '{ "actions": [ { "name": "create_directory", "directory_path": "src/test/resources/tmp_create_directory_tests/test/some_dir_1/some_dir_2" } ] }'
 ```

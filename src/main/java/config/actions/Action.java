@@ -54,6 +54,7 @@ public abstract class Action {
                 case "download_ai_model" -> ActionDownloadAIModel.parseInputAction(inputAction);
                 case "create_directory" -> ActionCreateDirectory.parseInputAction(inputAction);
                 case "run_ai_engine" -> ActionRunAIEngine.parseInputAction(inputAction);
+                case "end_ai_engine" -> ActionEndAIEngine.parseInputAction(inputAction);
                 case "update_to_running" -> ActionUpdateToRunning.parseInputAction(inputAction);
                 case "update_to_failed" -> ActionUpdateToFailed.parseInputAction(inputAction);
                 case "update_to_succeeded" -> ActionUpdateToSucceeded.parseInputAction(inputAction);

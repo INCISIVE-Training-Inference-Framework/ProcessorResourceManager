@@ -107,8 +107,8 @@ public class TestDownloadUserVars {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Error while downloading user vars";
@@ -131,8 +131,8 @@ public class TestDownloadUserVars {
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
             PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
         });
 
         String expectedMessage = "Bad input parameters exception: Action download user vars is bad formatted: JSONObject[\"user_vars_url\"] not found.";

@@ -87,13 +87,10 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
         RunAIEngine runAIEngine = new RunAIEngine(
                 action.getMaxIterationTime(),
                 action.getMaxInitializationTime(),
-                action.getMaxFinalizationTime(),
-                action.getMaxFinalizationRetries(),
                 action.getClientHost(),
                 action.getServerHost(),
                 action.getPingUrl(),
                 action.getRunUrl(),
-                action.getEndUrl(),
                 action.getCallbackUrl()
         );
         boolean initialized = false;
@@ -108,7 +105,6 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
            throw e;
         } finally {
             try {
-                runAIEngine.end();
                 if (initialized) runAIEngine.clean();
             } catch (Exception e) {
                 if (exceptionThrown) {
@@ -117,6 +113,18 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
                 } else throw e;
             }
         }
+    }
+
+    @Override
+    public void endAIEngine(ActionEndAIEngine action) throws InternalException {
+        EndAIEngine endAIEngine = new EndAIEngine(
+                action.getMaxFinalizationTime(),
+                action.getMaxFinalizationRetries(),
+                action.getClientHost(),
+                action.getPingUrl(),
+                action.getEndUrl()
+        );
+        endAIEngine.end();
     }
 
     @Override

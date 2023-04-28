@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,17 +36,22 @@ public class Application {
     public static void main(String[] args) {
         Namespace parsedArgs = null;
         List<Action> actions = null;
+        List<Action> failureActions = new ArrayList<>();
         PlatformAdapter platformAdapter = null;
+        Domain domain = null;
         try {
             // parse input parameters
             parsedArgs = parseInputArgs(args);
             actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
+            if (parsedArgs.get("failure_actions") != null) failureActions = Action.parseInputActions((JSONObject) parsedArgs.get("failure_actions"));
 
             // load main environmental variables
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
 
             // load abstract classes implementations
             platformAdapter = Factory.selectPlatformAdapter(initialConfig);
+
+            domain = new Domain(platformAdapter);
         } catch (BadConfigurationException | BadInputParametersException e) {
             logger.error(e);
             System.exit(1);
@@ -53,8 +59,7 @@ public class Application {
 
         try {
             // run main application
-            Domain domain = new Domain(actions, platformAdapter);
-            domain.run();
+            domain.run(actions);
         } catch (InternalException e) {
             e.print(logger);
 
@@ -68,14 +73,24 @@ public class Application {
 
                 // contact external endpoint if required
                 if (parsedArgs.get("failure_endpoint") != null) {
-                    logger.error("Running failure actions. Updating to failed");
-
                     ActionUpdateToFailed actionUpdateToFailed = new ActionUpdateToFailed(
                             "update_to_failed",
                             (String) parsedArgs.get("failure_endpoint"),
                             errorMessage
                     );
-                    platformAdapter.updateToFailed(actionUpdateToFailed);
+                    failureActions.add(actionUpdateToFailed);
+                }
+
+                if (failureActions.size() > 0) {
+                    logger.info("Running failure actions");
+                    for (Action action: failureActions) {
+                        try {
+                            domain.run(action);
+                        } catch (InternalException e2) {
+                            logger.error("Intermediate exception");
+                            e2.print(logger);
+                        }
+                    };
                 }
 
                 // extract error message to file
@@ -83,8 +98,6 @@ public class Application {
                 byte[] strToBytes = errorMessage.getBytes();
                 Files.write(path, strToBytes);
 
-            } catch (InternalException e2) {
-                e2.print(logger);
             } catch (IOException e3) {
                 logger.error(e3.getMessage());
                 e3.printStackTrace();
@@ -101,6 +114,9 @@ public class Application {
         );
         parser.addArgument("--failure-endpoint").type(String.class).help(
                 "the endpoint to hit when an error occurs"
+        );
+        parser.addArgument("--failure-actions").type(JSONObject.class).help(
+                "a JSONObject with a key \"actions\" with an array with the definitions of the actions to perform when an error occurs"
         );
 
         try {
