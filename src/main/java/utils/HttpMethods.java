@@ -57,7 +57,6 @@ public class HttpMethods {
     }
 
     public static void downloadFile(String url, OutputStream outputStream) throws IOException {
-        // TODO add method to work in disk for heavy models
         try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream())) {
             byte[] dataBuffer = new byte[1024];
             int bytesRead;

@@ -40,14 +40,23 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
 
     @Override
     public void downloadExternalData(ActionDownloadExternalData action) throws InternalException {
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        String temporalZippedFilePath = String.format("%s/tmp_zip_file", action.getOutputPath());
+        try (FileOutputStream outputStream = new FileOutputStream(temporalZippedFilePath)) {
             downloadFile(action.getExternalDataUrl(), outputStream);
-
-            // uncompress the model files and put them inside the directory
-            ZipCompression.unZipFile(new ByteArrayInputStream(outputStream.toByteArray()), Paths.get(action.getOutputPath()));
-
         } catch (IOException e) {
             throw new InternalException("Error while downloading external data", e);
+        }
+
+        try (FileInputStream inputStream = new FileInputStream(temporalZippedFilePath)) {
+            ZipCompression.unZipFile(inputStream, Paths.get(action.getOutputPath()));
+        } catch (IOException e) {
+            throw new InternalException("Error while unzipping external data", e);
+        }
+
+        try {
+            Files.delete(Paths.get(temporalZippedFilePath));
+        } catch (IOException e) {
+            throw new InternalException("Error while cleaning temporary external data", e);
         }
     }
 
@@ -62,14 +71,24 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
 
     @Override
     public void downloadAIModel(ActionDownloadAIModel action) throws InternalException {
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        String temporalZippedFilePath = String.format("%s/tmp_zip_file", action.getOutputPath());
+
+        try (FileOutputStream outputStream = new FileOutputStream(temporalZippedFilePath)) {
             downloadFile(action.getAiModelUrl(), outputStream);
-
-            // uncompress the model files and put them inside the directory
-            ZipCompression.unZipFile(new ByteArrayInputStream(outputStream.toByteArray()), Paths.get(action.getOutputPath()));
-
         } catch (IOException e) {
             throw new InternalException("Error while downloading AI Model", e);
+        }
+
+        try (FileInputStream inputStream = new FileInputStream(temporalZippedFilePath)) {
+            ZipCompression.unZipFile(inputStream, Paths.get(action.getOutputPath()));
+        } catch (IOException e) {
+            throw new InternalException("Error while unzipping AI Model", e);
+        }
+
+        try {
+            Files.delete(Paths.get(temporalZippedFilePath));
+        } catch (IOException e) {
+            throw new InternalException("Error while cleaning temporary AI Model", e);
         }
     }
 
