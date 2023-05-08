@@ -25,7 +25,6 @@ import static config.environment.EnvironmentVariable.loadEnvironmentVariables;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-// IMPORTANT -> do not run tests together, the API takes some time to free the port between requests
 
 public class TestRunAIEngine {
 

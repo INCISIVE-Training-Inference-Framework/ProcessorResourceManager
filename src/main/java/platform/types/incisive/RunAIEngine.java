@@ -194,7 +194,11 @@ public class RunAIEngine {
 
     public void clean() throws InternalException {
         // stop own server
-        this.server.stop(0);
+        try {
+            if (this.server != null) this.server.stop(0);
+        } catch (Exception e) {
+            throw new InternalException("Error while shutting down own server", e);
+        }
     }
 
     private class ServerHandler implements HttpHandler {
