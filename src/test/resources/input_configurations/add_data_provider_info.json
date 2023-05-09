@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "add_data_provider_info",
+      "read_file_path": "src/test/resources/tmp_add_data_provider_info_tests/platform_vars.json",
+      "write_file_path": "src/test/resources/tmp_add_data_provider_info_tests/test/platform_vars.json",
+      "data_provider": "uns"
+    }
+  ]
+}

@@ -27,4 +27,6 @@ public interface PlatformAdapter {
 
     void changeApiPortAndHost(ActionChangeApiHostAndPort action) throws InternalException;
 
+    void addDataProviderInfo(ActionAddDataProviderInfo action) throws InternalException;
+
 }

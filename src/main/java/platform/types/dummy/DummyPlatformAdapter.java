@@ -43,4 +43,7 @@ public class DummyPlatformAdapter implements PlatformAdapter {
     @Override
     public void changeApiPortAndHost(ActionChangeApiHostAndPort action) throws InternalException {}
 
+    @Override
+    public void addDataProviderInfo(ActionAddDataProviderInfo action) throws InternalException {}
+
 }

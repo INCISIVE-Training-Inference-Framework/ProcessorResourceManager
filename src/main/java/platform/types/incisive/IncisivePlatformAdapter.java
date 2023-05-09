@@ -389,4 +389,21 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
         }
     }
 
+    @Override
+    public void addDataProviderInfo(ActionAddDataProviderInfo action) throws InternalException {
+        JSONObject configuration;
+        try (InputStream inputStream = new FileInputStream(action.getReadFilePath())) {
+            configuration = readJson(inputStream);
+            configuration.put("data_provider", action.getDataProvider());
+        } catch (IOException e) {
+            throw new InternalException("Error while loading configuration file", e);
+        }
+
+        try (FileWriter file = new FileWriter(action.getWriteFilePath())) {
+            file.write(configuration.toString());
+        } catch (IOException e) {
+            throw new InternalException("Error while updating configuration file", e);
+        }
+    }
+
 }
