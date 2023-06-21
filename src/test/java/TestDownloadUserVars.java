@@ -77,6 +77,10 @@ public class TestDownloadUserVars {
     @Test
     public void downloadUserVarsSuccess() throws Exception {
         // create mock
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(Files.readAllBytes(configFilePath).length))
+                ));
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withBody(Files.readAllBytes(configFilePath))));
 
@@ -98,6 +102,10 @@ public class TestDownloadUserVars {
     @Test
     public void downloadUserVarsFailed() throws Exception {
         // create mock
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(Files.readAllBytes(configFilePath).length))
+                ));
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withStatus(400).withBody("")));
 

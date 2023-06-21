@@ -82,6 +82,10 @@ public class TestDownloadExternalData {
     @Test
     public void downloadInputInferenceDataSuccess() throws Exception {
         // create mock
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(byteArrayOutputStream.toByteArray().length))
+                ));
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withBody(byteArrayOutputStream.toByteArray())));
 
@@ -98,6 +102,10 @@ public class TestDownloadExternalData {
     @Test
     public void downloadInputInferenceDataFailed() throws Exception {
         // create mock
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(byteArrayOutputStream.toByteArray().length))
+                ));
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withStatus(400).withBody("")));
 

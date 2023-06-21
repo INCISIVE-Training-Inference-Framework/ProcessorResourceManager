@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.*;
+import org.wiremock.webhooks.Webhooks;
 import platform.PlatformAdapter;
 
 import java.io.ByteArrayOutputStream;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static config.environment.EnvironmentVariable.loadEnvironmentVariables;
 import static org.junit.Assert.*;
 import static utils.ZipCompression.zipFile;
@@ -25,7 +27,7 @@ import static utils.ZipCompression.zipFile;
 public class TestDownloadAIModel {
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8000);
+    public WireMockRule wireMockRule = new WireMockRule(options().port(8000).extensions(Webhooks.class), true);
     public JSONObject downloadAIModelAction;
     public static ByteArrayOutputStream byteArrayOutputStream;
     public static String testsRootDirectory = "src/test/resources/tmp_download_ai_model_tests/";
@@ -82,8 +84,14 @@ public class TestDownloadAIModel {
     @Test
     public void downloadAIModelSuccess() throws Exception {
         // create mock
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(byteArrayOutputStream.toByteArray().length))
+                ));
         stubFor(get(urlEqualTo("/api/some_url/"))
-                .willReturn(aResponse().withBody(byteArrayOutputStream.toByteArray())));
+                .willReturn(aResponse()
+                        .withBody(byteArrayOutputStream.toByteArray())
+                ));
 
         // run domain
         String[] args = {downloadAIModelAction.toString()};
@@ -94,12 +102,68 @@ public class TestDownloadAIModel {
         assertEquals(Arrays.asList("image1.png", "image2.png"), directoryFiles);
     }
 
+    @Test
+    public void downloadAIModelSuccessWithTwoTries() throws Exception {
+        // create mock
+        byte[] bytes = byteArrayOutputStream.toByteArray();
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(bytes.length))
+                ));
+        stubFor(get(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withBody(Arrays.copyOfRange(bytes, 0, bytes.length / 2))
+                ));
+        stubFor(get(urlEqualTo("/api/some_url/")).withHeader("range", equalTo(String.format("bytes=%d-%d", bytes.length / 2, bytes.length)))
+                .willReturn(aResponse()
+                        .withStatus(206)
+                        .withBody(Arrays.copyOfRange(bytes, bytes.length / 2, bytes.length))
+                ));
+
+        // run domain
+        String[] args = {downloadAIModelAction.toString()};
+        Application.main(args);
+
+        // assure files are ok
+        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
+        assertEquals(Arrays.asList("image1.png", "image2.png"), directoryFiles);
+    }
 
     @Test
     public void downloadAIModelFailed() throws Exception {
         // create mock
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(byteArrayOutputStream.toByteArray().length))
+                ));
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withStatus(400).withBody("")));
+
+        Exception exception = assertThrows(InternalException.class, () -> {
+            String[] args = {downloadAIModelAction.toString()};
+            Namespace parsedArgs = Application.parseInputArgs(args);
+            List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
+            Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
+            PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
+        });
+
+        String expectedMessage = "Error while downloading AI Model";
+        assertTrue(exception.getMessage().contains(expectedMessage));
+    }
+
+    @Test
+    public void downloadAIModelFailedNoMoreRetries() throws Exception {
+        // create mock
+        stubFor(head(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withHeader("content-length", String.valueOf(byteArrayOutputStream.toByteArray().length + 10))
+                ));
+        stubFor(get(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse()
+                        .withBody(byteArrayOutputStream.toByteArray())
+                ));
 
         Exception exception = assertThrows(InternalException.class, () -> {
             String[] args = {downloadAIModelAction.toString()};

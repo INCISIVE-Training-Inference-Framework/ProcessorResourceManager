@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.wiremock.webhooks.Webhooks.webhook;
 
-// IMPORTANT -> do not run tests together, the API takes some time to free the port between requests
 
 public class TestEndAIEngine {
 

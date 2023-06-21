@@ -9,18 +9,25 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 
 public class HttpMethods {
+
+    private static final Logger logger = LogManager.getLogger(HttpMethods.class);
 
     public static JSONObject postJsonMethod(String url, JSONObject entity, Set<Integer> expectedStatusCode, String errorMessage) throws InternalException {
         try(CloseableHttpClient client = HttpClients.createDefault()) {
@@ -57,12 +64,41 @@ public class HttpMethods {
     }
 
     public static void downloadFile(String url, OutputStream outputStream) throws IOException {
-        try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream())) {
-            byte[] dataBuffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                outputStream.write(dataBuffer, 0, bytesRead);
+        URL urlObject;
+        try {
+            urlObject = new URI(url).toURL();
+        } catch (URISyntaxException e) {
+            throw new IOException(e.getMessage());
+        }
+
+        long fileLength = getExternalFileLength(urlObject);
+        long totalReadBytes = 0;
+
+        int totalAllowedRetries = 3;
+        int retries = 0;
+
+        while(totalReadBytes < fileLength && retries < totalAllowedRetries) {
+            logger.info(String.format("Downloading file; read bytes %d; bytes to read: %d; retries: %d", totalReadBytes, fileLength, retries));
+
+            HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
+            if (totalReadBytes > 0) {
+                connection.setRequestProperty("Range", String.format("bytes=%d-%d", totalReadBytes, fileLength));
+                if (connection.getResponseCode() != 206) throw new IOException("External server does not support partial downloads");
             }
+
+            try (BufferedInputStream in = new BufferedInputStream(connection.getInputStream())) {
+                byte[] dataBuffer = new byte[8192];
+                int readBytes;
+                while ((readBytes = in.read(dataBuffer, 0, 8192)) != -1) {
+                    outputStream.write(dataBuffer, 0, readBytes);
+                    totalReadBytes += readBytes;
+                }
+            }
+            retries += 1;
+        }
+
+        if (totalReadBytes != fileLength) {
+            throw new IOException(String.format("Error download file; real size: %d; downloaded size: %d", fileLength, totalReadBytes));
         }
     }
 
@@ -147,5 +183,11 @@ public class HttpMethods {
         } catch (IOException | JSONException e) {
             throw new InternalException(String.format("%s. Error during post response", errorMessage), e);
         }
+    }
+
+    private static long getExternalFileLength(URL url) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("HEAD");
+        return connection.getContentLengthLong();
     }
 }
