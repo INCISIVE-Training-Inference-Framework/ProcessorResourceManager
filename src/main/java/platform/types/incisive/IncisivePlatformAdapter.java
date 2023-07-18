@@ -5,6 +5,12 @@ import config.environment.EnvironmentVariable;
 import exceptions.InternalException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +36,8 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
     }
 
     private static final Logger logger = LogManager.getLogger(IncisivePlatformAdapter.class);
+
+    private static final String INTERNAL_DATA_BREAST_CANCER_PATH = "./src/main/resources/auxiliary_elements/action_prepare_internal_data/breast/";
 
     public IncisivePlatformAdapter(Map<String, Object> config) {}
 
@@ -57,6 +65,144 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
             Files.delete(Paths.get(temporalZippedFilePath));
         } catch (IOException e) {
             throw new InternalException("Error while cleaning temporary external data", e);
+        }
+    }
+
+    @Override
+    public void prepareInternalData(ActionPrepareInternalData action) throws InternalException {
+        try {
+            // load links information
+            JSONObject breastColumnNamesLinksJson = action.getInformation().getJSONObject("fields_definition").getJSONObject("breast_cancer");
+            JSONObject breastSheetNamesLinksJson = action.getInformation().getJSONObject("sheets_definition");
+            JSONObject breastColumnPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_column_positions.json", INTERNAL_DATA_BREAST_CANCER_PATH)));
+            JSONObject breastSheetPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_positions.json", INTERNAL_DATA_BREAST_CANCER_PATH)));
+            JSONObject breastSheetStartPositionsLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_start_positions.json", INTERNAL_DATA_BREAST_CANCER_PATH)));
+            Map<String, Map<String, Object>> breastColumnNamesLinks = new HashMap<>();
+            for (String sheetNameJsonKey : breastColumnNamesLinksJson.keySet()) {
+                breastColumnNamesLinks.put(sheetNameJsonKey, breastColumnNamesLinksJson.getJSONObject(sheetNameJsonKey).toMap());
+            }
+            Map<String, Object> breastColumnPositionLinks = breastColumnPositionLinksJson.toMap();
+            Map<String, Object> breastSheetPositionLinks = breastSheetPositionLinksJson.toMap();
+            Map<String, Object> breastSheetStartPositionsLinks = breastSheetStartPositionsLinksJson.toMap();
+            Map<String, Object> breastSheetNamesLinks = breastSheetNamesLinksJson.toMap();
+
+            // copy templates files to final location
+            Path breastFinalLocation = Path.of(action.getOutputPath(), "Breast_Cancer.xlsx");
+            Files.copy(Path.of(String.format("%s/template.xlsx", INTERNAL_DATA_BREAST_CANCER_PATH)), breastFinalLocation);
+
+            // fill template files
+            try (FileInputStream breastCancerFile = new FileInputStream(breastFinalLocation.toFile());
+                 XSSFWorkbook workbook = new XSSFWorkbook(breastCancerFile)) {
+
+                JSONArray patientsInformation = action.getInformation().getJSONArray("patients");
+                for (int i = 0; i < patientsInformation.length(); i++) {
+                    JSONObject patient = patientsInformation.getJSONObject(i);
+
+                    // breast cancer
+                    fillInternalPatientCancerData(
+                            workbook,
+                            patient.getJSONObject("clinical_data").getJSONObject("breast_cancer"),
+                            breastColumnNamesLinks,
+                            breastColumnPositionLinks,
+                            breastSheetPositionLinks,
+                            breastSheetStartPositionsLinks,
+                            breastSheetNamesLinks
+                    );
+                }
+                try (OutputStream breastCancerFileOutput = new FileOutputStream(breastFinalLocation.toFile())) {
+                    workbook.write(breastCancerFileOutput);
+                }
+            }
+        } catch (IOException | JSONException e) {
+            throw new InternalException("Error while processing internal data", e);
+        }
+    }
+
+    private void fillInternalPatientCancerData(
+            Workbook cancerTypeExcel,
+            JSONObject information,
+            Map<String, Map<String, Object>> columnNamesLinks,
+            Map<String, Object> columnPositionLinks,
+            Map<String, Object> sheetPositionLinks,
+            Map<String, Object> sheetStartPositionsLinks,
+            Map<String, Object> sheetNamesLinks
+    ) throws IOException, InternalException {
+        for (String sheetNameJsonKey: information.keySet()) {
+            logger.debug(String.format("Sheet name: %s", sheetNameJsonKey));
+            Object sheetInfoTemp = information.get(sheetNameJsonKey);
+
+            if (!sheetNamesLinks.containsKey(sheetNameJsonKey)) throw new InternalException(String.format("Not existent sheetJsonKeyNameLink: %s", sheetNameJsonKey), null);
+            String sheetName = (String) sheetNamesLinks.get(sheetNameJsonKey);
+
+            Sheet sheet = cancerTypeExcel.getSheet(sheetName);
+            if (sheet == null) throw new InternalException(String.format("Not existent sheet with name %s", sheetName), null);
+
+            if (!sheetStartPositionsLinks.containsKey(sheetName)) throw new InternalException(String.format("Not existent initial row position for sheet %s", sheetName), null);
+            int initialRowPosition = (int) sheetStartPositionsLinks.get(sheetName);
+
+            if (!(sheetInfoTemp instanceof JSONObject) && !(sheetInfoTemp instanceof JSONArray)) throw new InternalException(String.format("Unexpected token on sheetInfo: %s", sheetInfoTemp.getClass().getSimpleName()), null);
+
+            JSONArray inputItems;
+            if (sheetInfoTemp instanceof JSONObject sheetInfo) {
+                inputItems = new JSONArray();
+                inputItems.put(sheetInfo);
+            } else {
+                inputItems = (JSONArray) sheetInfoTemp;
+            }
+
+            for (int i = 0; i < inputItems.length(); i++) {
+                JSONObject item = inputItems.getJSONObject(i);
+
+                Row row = sheet.createRow(initialRowPosition);
+                initialRowPosition += 1;
+
+                item.keys().forEachRemaining(key -> {
+                    try {
+                        if (!item.isNull(key)) {
+                            String value = item.getString(key);
+
+                            if (!columnNamesLinks.containsKey(sheetNameJsonKey)) throw new InternalException(String.format("Not existent column name in columnNamesLinks: %s", sheetNameJsonKey), null);
+                            Map columnNamesLinksSheetInfo = columnNamesLinks.get(sheetNameJsonKey);
+
+                            if (!columnNamesLinksSheetInfo.containsKey(key)) throw new InternalException(String.format("Not existent column link name in columnNamesLinksSheetInfo: %s", key), null);
+                            String columnName = (String) columnNamesLinksSheetInfo.get(key);
+
+                            if (!columnPositionLinks.containsKey(sheetName)) throw new InternalException(String.format("Not existent sheet in columnPositionLinks: %s", sheetName), null);
+                            Map columnPositionSheetInfo = (Map) columnPositionLinks.get(sheetName);
+
+                            if (!columnPositionSheetInfo.containsKey(columnName)) throw new InternalException(String.format("Not existent columnName in columnPositionSheetInfo: %s", columnName), null);
+                            int columnPosition = (int) columnPositionSheetInfo.get(columnName);
+
+                            Cell cell = row.createCell(columnPosition);
+                            boolean _continue = true;
+                            try {
+                                long aux = Long.parseLong(value);
+                                cell.setCellValue(aux);
+                                _continue = false;
+                            } catch (NumberFormatException e) {
+                                // empty
+                            }
+                            if (_continue) {
+                                try {
+                                    double aux = Double.parseDouble(value);
+                                    cell.setCellValue(aux);
+                                    _continue = false;
+                                } catch (NumberFormatException e) {
+                                    // empty
+                                }
+                                if (_continue) {
+                                    cell.setCellValue(value);
+                                }
+                            }
+                            logger.debug(String.format("Sheet: {%s}\tKey: {%s}\tValue: {%s}\t", sheetName, key, value));
+                        } else {
+                            logger.debug(String.format("Sheet: {%s}\tKey: {%s}\tValue: {null}\t", sheetName, key));
+                        }
+                    } catch (Exception e) {
+                        logger.error(e);
+                    }
+                });
+            }
         }
     }
 

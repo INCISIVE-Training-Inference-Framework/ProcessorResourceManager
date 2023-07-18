@@ -17,6 +17,9 @@ WORKDIR /usr/application
 # we copy the dependencies from the previous image
 COPY --from=maven /usr/application/target/processor_resource_manager-*-jar-with-dependencies.jar processor_resource_manager.jar
 
+# we copy the resources
+COPY /src/main/resources ./src/main/resources
+
 # change directory permissions to allow access for not root users
 RUN chmod -R a+rwX .
 
