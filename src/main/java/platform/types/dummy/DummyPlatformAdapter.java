@@ -17,6 +17,9 @@ public class DummyPlatformAdapter implements PlatformAdapter {
     public void downloadExternalData(ActionDownloadExternalData action) throws InternalException {}
 
     @Override
+    public void prepareInternalData(ActionPrepareInternalData action) throws InternalException {}
+
+    @Override
     public void downloadUserVars(ActionDownloadUserVars action) throws InternalException {}
 
     @Override

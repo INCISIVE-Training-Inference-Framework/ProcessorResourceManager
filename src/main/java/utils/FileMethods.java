@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class FileMethods {
 
@@ -20,5 +22,11 @@ public class FileMethods {
 
             return new JSONObject(stringBuilder.toString());
         }
+    }
+
+    public static void writeJson(Path outputPath, JSONObject jsonObject) throws IOException {
+        if (Files.exists(outputPath)) Files.delete(outputPath);
+        Files.createFile(outputPath);
+        Files.writeString(outputPath, jsonObject.toString(4));
     }
 }

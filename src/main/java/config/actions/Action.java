@@ -60,6 +60,7 @@ public abstract class Action {
                 case "update_to_succeeded" -> ActionUpdateToSucceeded.parseInputAction(inputAction);
                 case "change_api_host_and_port" -> ActionChangeApiHostAndPort.parseInputAction(inputAction);
                 case "add_data_provider_info" -> ActionAddDataProviderInfo.parseInputAction(inputAction);
+                case "prepare_internal_data" -> ActionPrepareInternalData.parseInputAction(inputAction);
                 default -> throw new BadInputParametersException(String.format("The action with name \"%s\" does not exist", actionName));
             };
             outputActions.add(action);

@@ -9,6 +9,8 @@ public interface PlatformAdapter {
 
     void downloadExternalData(ActionDownloadExternalData action) throws InternalException;
 
+    void prepareInternalData(ActionPrepareInternalData action) throws InternalException;
+
     void downloadUserVars(ActionDownloadUserVars action) throws InternalException;
 
     void downloadAIModel(ActionDownloadAIModel action) throws InternalException;
