@@ -82,7 +82,7 @@ public class ZipCompression {
     private static File newFile(File destinationDir, ZipEntry zipEntry, String parentDirectory) throws IOException {
         File destFile;
         if (parentDirectory != null) {
-            String destinationPath = destinationDir.getCanonicalPath() + zipEntry.getName().replaceFirst(parentDirectory, "");
+            String destinationPath = destinationDir.getCanonicalPath() + File.separator + zipEntry.getName().replaceFirst(parentDirectory, "");
             destFile = new File(destinationPath);
         } else {
             destFile = new File(destinationDir, zipEntry.getName());
