@@ -25,8 +25,7 @@ public class Domain {
     public void run(Action action) throws InternalException {
         logger.info(String.format("Running action \"%s\"", action.getClass().getSimpleName()));
 
-        if (action instanceof ActionDownloadPlatformData) this.platform.downloadPlatformData((ActionDownloadPlatformData) action);
-        else if (action instanceof ActionDownloadExternalData) this.platform.downloadExternalData((ActionDownloadExternalData) action);
+        if (action instanceof ActionDownloadExternalData) this.platform.downloadExternalData((ActionDownloadExternalData) action);
         else if (action instanceof ActionDownloadUserVars) this.platform.downloadUserVars((ActionDownloadUserVars) action);
         else if (action instanceof ActionDownloadAIModel) this.platform.downloadAIModel((ActionDownloadAIModel) action);
         else if (action instanceof ActionCreateDirectory) this.platform.createDirectory((ActionCreateDirectory) action);

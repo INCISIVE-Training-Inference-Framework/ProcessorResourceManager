@@ -48,7 +48,6 @@ public abstract class Action {
             }
 
             Action action = switch (actionName) {
-                case "download_platform_data" -> ActionDownloadPlatformData.parseInputAction(inputAction);
                 case "download_external_data" -> ActionDownloadExternalData.parseInputAction(inputAction);
                 case "download_user_vars" -> ActionDownloadUserVars.parseInputAction(inputAction);
                 case "download_ai_model" -> ActionDownloadAIModel.parseInputAction(inputAction);

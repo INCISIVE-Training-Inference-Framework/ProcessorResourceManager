@@ -5,8 +5,6 @@ import exceptions.InternalException;
 
 public interface PlatformAdapter {
 
-    void downloadPlatformData(ActionDownloadPlatformData action) throws InternalException;
-
     void downloadExternalData(ActionDownloadExternalData action) throws InternalException;
 
     void prepareInternalData(ActionPrepareInternalData action) throws InternalException;

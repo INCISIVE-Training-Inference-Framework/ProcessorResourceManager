@@ -1,4 +1,4 @@
-package platform.types.incisive;
+package platform.types.incisive.actions;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -30,13 +30,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 
-public class RunAIEngine {
+public class AuxiliaryRunAIEngine {
 
     private static final int PING_TIMEOUT = 3;  // seconds
     private static final int RUN_TIMEOUT = 3;  // seconds
     private static CountDownLatch countDownLatch = null;
     private static ServerHandlingOutput serverHandlingOutput = null;
-    private static final Logger logger = LogManager.getLogger(RunAIEngine.class);
+    private static final Logger logger = LogManager.getLogger(AuxiliaryRunAIEngine.class);
 
     private final long maxIterationTime;
     private final long maxInitializationTime;
@@ -48,7 +48,7 @@ public class RunAIEngine {
 
     private HttpServer server;
 
-    public RunAIEngine(
+    public AuxiliaryRunAIEngine(
             long maxIterationTime,
             long maxInitializationTime,
             String clientHost,

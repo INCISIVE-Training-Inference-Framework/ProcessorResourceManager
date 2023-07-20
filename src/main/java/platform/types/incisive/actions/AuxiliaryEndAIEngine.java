@@ -1,4 +1,4 @@
-package platform.types.incisive;
+package platform.types.incisive.actions;
 
 import exceptions.InternalException;
 import org.apache.http.HttpStatus;
@@ -17,11 +17,11 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 
-public class EndAIEngine {
+public class AuxiliaryEndAIEngine {
 
     private static final int PING_TIMEOUT = 3;  // seconds
     private static final int END_TIMEOUT = 3;  // seconds
-    private static final Logger logger = LogManager.getLogger(EndAIEngine.class);
+    private static final Logger logger = LogManager.getLogger(AuxiliaryEndAIEngine.class);
 
     private final long maxFinalizationTime;
     private final int maxFinalizationRetries;
@@ -29,7 +29,7 @@ public class EndAIEngine {
     private final String pingUrl;
     private final String endUrl;
 
-    public EndAIEngine(
+    public AuxiliaryEndAIEngine(
             long maxFinalizationTime,
             int maxFinalizationRetries,
             String clientHost,

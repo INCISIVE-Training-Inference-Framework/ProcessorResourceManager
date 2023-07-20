@@ -11,9 +11,6 @@ public class DummyPlatformAdapter implements PlatformAdapter {
     private static final Logger logger = LogManager.getLogger(DummyPlatformAdapter.class);
 
     @Override
-    public void downloadPlatformData(ActionDownloadPlatformData action) throws InternalException {}
-
-    @Override
     public void downloadExternalData(ActionDownloadExternalData action) throws InternalException {}
 
     @Override
