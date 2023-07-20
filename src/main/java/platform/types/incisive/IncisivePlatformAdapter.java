@@ -5,10 +5,6 @@ import config.environment.EnvironmentVariable;
 import exceptions.InternalException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONArray;
@@ -37,7 +33,8 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
 
     private static final Logger logger = LogManager.getLogger(IncisivePlatformAdapter.class);
 
-    private static final String INTERNAL_DATA_BREAST_CANCER_PATH = "./src/main/resources/auxiliary_elements/action_prepare_internal_data/breast/";
+    private static final String INTERNAL_DATA_CANCER_PATHS = "./src/main/resources/auxiliary_elements/action_prepare_internal_data";
+    private static final List<String> CANCER_TYPES = List.of("breast_cancer", "lung_cancer", "prostate_cancer", "colorectal_cancer");
 
     public IncisivePlatformAdapter(Map<String, Object> config) {}
 
@@ -70,51 +67,127 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
 
     @Override
     public void prepareInternalData(ActionPrepareInternalData action) throws InternalException {
+        class CancerTypeLinksData {
+            private final Map<String, Map<String, Object>> columnNamesLinks;
+            private final Map<String, Object> columnPositionLinks;
+            private final Map<String, Object> sheetPositionLinks;
+            private final Map<String, Object> sheetStartPositionsLinks;
+            private final Map<String, Object> sheetNamesLinks;
+
+            public CancerTypeLinksData(String cancerType) throws IOException {
+                String internalPath = String.format("%s/%s", INTERNAL_DATA_CANCER_PATHS, cancerType);
+                JSONObject columnNamesLinksJson = action.getInformation().getJSONObject("fields_definition").getJSONObject(cancerType);
+                JSONObject sheetNamesLinksJson = action.getInformation().getJSONObject("sheets_definition");
+                JSONObject columnPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_column_positions.json", internalPath)));
+                JSONObject sheetPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_positions.json", internalPath)));
+                JSONObject sheetStartPositionsLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_start_positions.json", internalPath)));
+                this.columnNamesLinks = new HashMap<>();
+                for (String sheetNameJsonKey : columnNamesLinksJson.keySet()) {
+                    columnNamesLinks.put(sheetNameJsonKey, columnNamesLinksJson.getJSONObject(sheetNameJsonKey).toMap());
+                }
+                this.columnPositionLinks = columnPositionLinksJson.toMap();
+                this.sheetPositionLinks = sheetPositionLinksJson.toMap();
+                this.sheetStartPositionsLinks = sheetStartPositionsLinksJson.toMap();
+                this.sheetNamesLinks = sheetNamesLinksJson.toMap();
+            }
+
+            public Map<String, Map<String, Object>> getColumnNamesLinks() {
+                return columnNamesLinks;
+            }
+
+            public Map<String, Object> getColumnPositionLinks() {
+                return columnPositionLinks;
+            }
+
+            public Map<String, Object> getSheetPositionLinks() {
+                return sheetPositionLinks;
+            }
+
+            public Map<String, Object> getSheetStartPositionsLinks() {
+                return sheetStartPositionsLinks;
+            }
+
+            public Map<String, Object> getSheetNamesLinks() {
+                return sheetNamesLinks;
+            }
+        }
+        InternalException exceptionThrown = null;
+        Map<String, Path> cancerFinalLocations = new HashMap<>();
+        List<FileInputStream> cancerInputStreams = new ArrayList<>();
+        Map<String, XSSFWorkbook> cancerWorkbooks = new HashMap<>();
         try {
             // load links information
-            JSONObject breastColumnNamesLinksJson = action.getInformation().getJSONObject("fields_definition").getJSONObject("breast_cancer");
-            JSONObject breastSheetNamesLinksJson = action.getInformation().getJSONObject("sheets_definition");
-            JSONObject breastColumnPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_column_positions.json", INTERNAL_DATA_BREAST_CANCER_PATH)));
-            JSONObject breastSheetPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_positions.json", INTERNAL_DATA_BREAST_CANCER_PATH)));
-            JSONObject breastSheetStartPositionsLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_start_positions.json", INTERNAL_DATA_BREAST_CANCER_PATH)));
-            Map<String, Map<String, Object>> breastColumnNamesLinks = new HashMap<>();
-            for (String sheetNameJsonKey : breastColumnNamesLinksJson.keySet()) {
-                breastColumnNamesLinks.put(sheetNameJsonKey, breastColumnNamesLinksJson.getJSONObject(sheetNameJsonKey).toMap());
+            Map<String, CancerTypeLinksData> cancerLinksDatas = new HashMap<>();
+            for (String cancerType: CANCER_TYPES) {
+                cancerLinksDatas.put(cancerType, new CancerTypeLinksData(cancerType));
             }
-            Map<String, Object> breastColumnPositionLinks = breastColumnPositionLinksJson.toMap();
-            Map<String, Object> breastSheetPositionLinks = breastSheetPositionLinksJson.toMap();
-            Map<String, Object> breastSheetStartPositionsLinks = breastSheetStartPositionsLinksJson.toMap();
-            Map<String, Object> breastSheetNamesLinks = breastSheetNamesLinksJson.toMap();
 
-            // copy templates files to final location
-            Path breastFinalLocation = Path.of(action.getOutputPath(), "Breast_Cancer.xlsx");
-            Files.copy(Path.of(String.format("%s/template.xlsx", INTERNAL_DATA_BREAST_CANCER_PATH)), breastFinalLocation);
+            // copy templates files to final location and open them
+            for (String cancerType: CANCER_TYPES) {
+                Path finalLocation = Path.of(
+                        action.getOutputPath(),
+                        String.format("%s_Cancer.xlsx", cancerType.split("_")[0].substring(0, 1).toUpperCase() + cancerType.split("_")[0].substring(1))
+                );
+                cancerFinalLocations.put(cancerType, finalLocation);
 
-            // fill template files
-            try (FileInputStream breastCancerFile = new FileInputStream(breastFinalLocation.toFile());
-                 XSSFWorkbook workbook = new XSSFWorkbook(breastCancerFile)) {
+                // copy templates files to final location
+                Files.copy(Path.of(String.format("%s/%s/template.xlsx", INTERNAL_DATA_CANCER_PATHS, cancerType)), finalLocation);
+
+                // open templates
+                FileInputStream cancerInputStream = new FileInputStream(finalLocation.toFile());
+                cancerInputStreams.add(cancerInputStream);
+                cancerWorkbooks.put(cancerType, new XSSFWorkbook(cancerInputStream));
+            }
+
+            // fill templates
+            for (String cancerType: CANCER_TYPES) {
+                logger.debug(String.format("Filling template of %s", cancerType));
+                XSSFWorkbook cancerWorkbook = cancerWorkbooks.get(cancerType);
+                CancerTypeLinksData cancerLinksData = cancerLinksDatas.get(cancerType);
 
                 JSONArray patientsInformation = action.getInformation().getJSONArray("patients");
                 for (int i = 0; i < patientsInformation.length(); i++) {
                     JSONObject patient = patientsInformation.getJSONObject(i);
 
-                    // breast cancer
-                    fillInternalPatientCancerData(
-                            workbook,
-                            patient.getJSONObject("clinical_data").getJSONObject("breast_cancer"),
-                            breastColumnNamesLinks,
-                            breastColumnPositionLinks,
-                            breastSheetPositionLinks,
-                            breastSheetStartPositionsLinks,
-                            breastSheetNamesLinks
-                    );
+                    if (patient.getJSONObject("clinical_data").has(cancerType) && !patient.getJSONObject("clinical_data").isNull(cancerType)) {
+                        fillInternalPatientCancerData(
+                                cancerWorkbook,
+                                patient.getJSONObject("clinical_data").getJSONObject(cancerType),
+                                cancerLinksData.getColumnNamesLinks(),
+                                cancerLinksData.getColumnPositionLinks(),
+                                cancerLinksData.getSheetPositionLinks(),
+                                cancerLinksData.getSheetStartPositionsLinks(),
+                                cancerLinksData.getSheetNamesLinks()
+                        );
+                    }
                 }
-                try (OutputStream breastCancerFileOutput = new FileOutputStream(breastFinalLocation.toFile())) {
-                    workbook.write(breastCancerFileOutput);
+
+                try (OutputStream cancerFileOutput = new FileOutputStream(cancerFinalLocations.get(cancerType).toFile())) {
+                    cancerWorkbook.write(cancerFileOutput);
                 }
             }
-        } catch (IOException | JSONException e) {
-            throw new InternalException("Error while processing internal data", e);
+
+        } catch (IOException | JSONException | InternalException e) {
+            exceptionThrown = new InternalException("Error while processing internal data", e);
+            throw exceptionThrown;
+        } finally {
+            // close resources
+            try {
+                for (XSSFWorkbook cancerWorkbook : cancerWorkbooks.values()) {
+                    if (cancerWorkbook != null) cancerWorkbook.close();
+                }
+                for (FileInputStream cancerInputStream : cancerInputStreams) {
+                    if (cancerInputStream != null) cancerInputStream.close();
+                }
+            } catch (IOException e) {
+                if (exceptionThrown != null) {
+                    logger.error("Intermediate exception");
+                    e.printStackTrace();
+                    throw exceptionThrown;
+                } else {
+                    throw new InternalException("Error while closing resources", e);
+                }
+            }
         }
     }
 
@@ -170,7 +243,9 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
                             if (!columnPositionLinks.containsKey(sheetName)) throw new InternalException(String.format("Not existent sheet in columnPositionLinks: %s", sheetName), null);
                             Map columnPositionSheetInfo = (Map) columnPositionLinks.get(sheetName);
 
-                            if (!columnPositionSheetInfo.containsKey(columnName)) throw new InternalException(String.format("Not existent columnName in columnPositionSheetInfo: %s", columnName), null);
+                            if (!columnPositionSheetInfo.containsKey(columnName)) {
+                                throw new InternalException(String.format("Not existent columnName in columnPositionSheetInfo: %s", columnName), null);
+                            }
                             int columnPosition = (int) columnPositionSheetInfo.get(columnName);
 
                             Cell cell = row.createCell(columnPosition);

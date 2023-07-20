@@ -16,7 +16,6 @@ public class TestPrepareInternalData {
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8000);
-    public JSONObject prepareInternalDataAction;
     public static ByteArrayOutputStream byteArrayOutputStream;
     public static String testsRootDirectory = "src/test/resources/tmp_prepare_internal_data_tests/";
 
@@ -37,11 +36,6 @@ public class TestPrepareInternalData {
             FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
         }
         Files.createDirectory(Paths.get(testsRootDirectory + "test"));
-
-
-        // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_breast.json")));
-        prepareInternalDataAction = new JSONObject(content);
     }
 
     @After
@@ -62,14 +56,63 @@ public class TestPrepareInternalData {
     }
 
     @Test
-    public void prepareInternalDataSuccess() throws Exception {
+    public void prepareInternalDataSuccessBreast() throws Exception {
+        // load default input json
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_breast.json")));
+        JSONObject prepareInternalDataAction = new JSONObject(content);
+
         // run domain
         String[] args = {prepareInternalDataAction.toString()};
         Application.main(args);
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(List.of("Breast_Cancer.xlsx"), directoryFiles);
+        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
+    }
+
+    @Test
+    public void prepareInternalDataSuccessLung() throws Exception {
+        // load default input json
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_lung.json")));
+        JSONObject prepareInternalDataAction = new JSONObject(content);
+
+        // run domain
+        String[] args = {prepareInternalDataAction.toString()};
+        Application.main(args);
+
+        // assure files are ok
+        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
+        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
+    }
+
+    @Test
+    public void prepareInternalDataSuccessProstate() throws Exception {
+        // load default input json
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_prostate.json")));
+        JSONObject prepareInternalDataAction = new JSONObject(content);
+
+        // run domain
+        String[] args = {prepareInternalDataAction.toString()};
+        Application.main(args);
+
+        // assure files are ok
+        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
+        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
+    }
+
+    @Test
+    public void prepareInternalDataSuccessColorectal() throws Exception {
+        // load default input json
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_colorectal.json")));
+        JSONObject prepareInternalDataAction = new JSONObject(content);
+
+        // run domain
+        String[] args = {prepareInternalDataAction.toString()};
+        Application.main(args);
+
+        // assure files are ok
+        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
+        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
     }
 
 }
