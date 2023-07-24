@@ -10,7 +10,6 @@ import org.junit.*;
 import platform.PlatformAdapter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -43,7 +42,7 @@ public class TestDownloadExternalData {
         Files.createFile(Paths.get(testsRootDirectory + "tmp/image1.png"));
         Files.createFile(Paths.get(testsRootDirectory + "tmp/image2.png"));
         byteArrayOutputStream = new ByteArrayOutputStream();
-        zipFile(new File(testsRootDirectory + "tmp"), "external_data", byteArrayOutputStream);
+        zipFile(testsRootDirectory + "tmp", byteArrayOutputStream);
         FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "tmp").toFile());
     }
 
@@ -95,7 +94,7 @@ public class TestDownloadExternalData {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(Arrays.asList("image1.png", "image2.png"), directoryFiles);
+        assertEquals(Arrays.asList("tmp", "image1.png", "image2.png"), directoryFiles);
     }
 
 

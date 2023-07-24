@@ -8,7 +8,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,9 +41,8 @@ public class ActionUpdateToSucceededImplementation {
             if (action.isUploadAIModel()) {
                 logger.debug("Uploading AI Model");
                 byte[] modelBytes;
-                File modelDirectory = new File(action.getAiModelUploadPath());
                 try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                    zipFile(modelDirectory, modelDirectory.getName(), outputStream);
+                    zipFile(action.getAiModelUploadPath(), outputStream);
                     modelBytes = outputStream.toByteArray();
                 } catch (IOException e) {
                     throw new InternalException("Error while retrieving AI Model", e);
@@ -138,9 +140,8 @@ public class ActionUpdateToSucceededImplementation {
             if (action.isUploadGenericFile()) {
                 logger.debug("Uploading Generic File");
                 byte[] genericFileBytes;
-                File modelDirectory = new File(action.getGenericFileUploadPath());
                 try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                    zipFile(modelDirectory, modelDirectory.getName(), outputStream);
+                    zipFile(action.getGenericFileUploadPath(), outputStream);
                     genericFileBytes = outputStream.toByteArray();
                 } catch (IOException e) {
                     throw new InternalException("Error while retrieving Generic File", e);

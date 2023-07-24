@@ -11,7 +11,6 @@ import org.wiremock.webhooks.Webhooks;
 import platform.PlatformAdapter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -45,7 +44,7 @@ public class TestDownloadAIModel {
         Files.createFile(Paths.get(testsRootDirectory + "tmp/image1.png"));
         Files.createFile(Paths.get(testsRootDirectory + "tmp/image2.png"));
         byteArrayOutputStream = new ByteArrayOutputStream();
-        zipFile(new File(testsRootDirectory + "tmp"), "ai_model", byteArrayOutputStream);
+        zipFile(testsRootDirectory + "tmp", byteArrayOutputStream);
         FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "tmp").toFile());
     }
 
@@ -99,7 +98,7 @@ public class TestDownloadAIModel {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(Arrays.asList("image1.png", "image2.png"), directoryFiles);
+        assertEquals(Arrays.asList("tmp", "image1.png", "image2.png"), directoryFiles);
     }
 
     @Test
@@ -126,7 +125,7 @@ public class TestDownloadAIModel {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(Arrays.asList("image1.png", "image2.png"), directoryFiles);
+        assertEquals(Arrays.asList("tmp", "image1.png", "image2.png"), directoryFiles);
     }
 
     @Test
