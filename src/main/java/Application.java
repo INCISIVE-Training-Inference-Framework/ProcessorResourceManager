@@ -95,6 +95,7 @@ public class Application {
 
                 // extract error message to file
                 Path path = Paths.get("error_message.txt");
+                errorMessage = errorMessage.replaceAll("[^a-zA-Z0-9 .\\-_><:]", ""); // cleans error message to avoid following parsing errors
                 byte[] strToBytes = errorMessage.getBytes();
                 Files.write(path, strToBytes);
 
