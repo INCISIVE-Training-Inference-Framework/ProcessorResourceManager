@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {
+      "name": "ping_ai_engine",
+      "max_initialization_time": 2,
+      "client_host": "127.0.0.1:8001",
+      "ping_url": "/api/ping"
+    }
+  ]
+}

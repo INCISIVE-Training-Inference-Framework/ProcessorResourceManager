@@ -48,6 +48,11 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
     }
 
     @Override
+    public void pingAIEngine(ActionPingAIEngine action) throws InternalException {
+        ActionPingAIEngineImplementation.run(action);
+    }
+
+    @Override
     public void runAIEngine(ActionRunAIEngine action) throws InternalException {
         ActionRunAIEngineImplementation.run(action);
     }

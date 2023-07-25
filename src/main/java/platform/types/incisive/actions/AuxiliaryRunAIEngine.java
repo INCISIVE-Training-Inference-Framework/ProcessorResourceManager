@@ -5,12 +5,9 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import exceptions.InternalException;
 import org.apache.http.HttpStatus;
-import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -23,27 +20,21 @@ import utils.FileMethods;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 
 public class AuxiliaryRunAIEngine {
 
-    private static final int PING_TIMEOUT = 3;  // seconds
-    private static final int RUN_TIMEOUT = 3;  // seconds
+    private static final int HTTP_CALLS_TIMEOUT = 3;  // seconds
     private static CountDownLatch countDownLatch = null;
     private static ServerHandlingOutput serverHandlingOutput = null;
     private static final Logger logger = LogManager.getLogger(AuxiliaryRunAIEngine.class);
 
     private final long maxIterationTime;
-    private final long maxInitializationTime;
     private final String clientHost;
     private final String serverHost;
-    private final String pingUrl;
     private final String runUrl;
     private final String callbackUrl;
 
@@ -51,18 +42,14 @@ public class AuxiliaryRunAIEngine {
 
     public AuxiliaryRunAIEngine(
             long maxIterationTime,
-            long maxInitializationTime,
             String clientHost,
             String serverHost,
-            String pingUrl,
             String runUrl,
             String callbackUrl
     ) {
         this.maxIterationTime =maxIterationTime;
-        this.maxInitializationTime = maxInitializationTime;
         this.clientHost = clientHost;
         this.serverHost = serverHost;
-        this.pingUrl = pingUrl;
         this.runUrl = runUrl;
         this.callbackUrl = callbackUrl;
     }
@@ -100,56 +87,10 @@ public class AuxiliaryRunAIEngine {
         this.server.start();
     }
 
-    public void waitAIEngineToBeReady() throws InternalException {
-        logger.debug("Waiting for AI Engine to be ready");
-
-        Timestamp startTime = Timestamp.from(Instant.now());
-        Timestamp currentTime = startTime;
-        boolean AIEngineStarted = false;
-
-        // set config
-        RequestConfig config = RequestConfig.custom().setConnectTimeout(PING_TIMEOUT * 1000).build();
-
-        // create client
-        try(CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build()) {
-
-            // iterate until AIEngine is ready
-            while (!AIEngineStarted && (currentTime.getTime() < (startTime.getTime() + this.maxInitializationTime  * 1000))) {
-
-                // query AI Engine
-                try(CloseableHttpResponse response = client.execute(new HttpGet(String.format("http://%s%s", this.clientHost, this.pingUrl)))) {
-                    int statusCode = response.getStatusLine().getStatusCode();
-                    if (statusCode == HttpStatus.SC_OK) AIEngineStarted = true;
-                    else throw new InternalException(String.format("Error while waiting for the AI Engine to be ready (during the query). Incorrect initialization with status code %d", statusCode), null);
-                } catch (ConnectException | NoHttpResponseException | ConnectTimeoutException e) {
-                    // do nothing
-                } catch (IOException e) {
-                    throw new InternalException("Error while waiting for the AI Engine to be ready (during the query)", e);
-                }
-
-                // sleep 3 seconds
-                if (!AIEngineStarted) {
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        throw new InternalException("Error while waiting for the AI Engine to be ready (during the thread sleep)", e);
-                    }
-                }
-
-                currentTime = Timestamp.from(Instant.now());
-            }
-
-        } catch (IOException e) {
-            throw new InternalException("Error while waiting for the AI Engine to be ready (during the client instantiation)", e);
-        }
-
-        if (!AIEngineStarted) throw new InternalException("Error while waiting for the AI Engine to be ready. It did not start before the timeout", null);
-    }
-
     public void run(String useCase) throws InternalException {
         logger.debug(String.format("Running the AI Engine. Use case: %s", useCase));
 
-        RequestConfig config = RequestConfig.custom().setConnectTimeout(RUN_TIMEOUT * 1000).build();
+        RequestConfig config = RequestConfig.custom().setConnectTimeout(HTTP_CALLS_TIMEOUT * 1000).build();
         try(CloseableHttpClient client = HttpClientBuilder.create().setDefaultRequestConfig(config).build()) {
 
             // create post

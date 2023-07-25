@@ -29,6 +29,7 @@ public class Domain {
         else if (action instanceof ActionDownloadUserVars) this.platform.downloadUserVars((ActionDownloadUserVars) action);
         else if (action instanceof ActionDownloadAIModel) this.platform.downloadAIModel((ActionDownloadAIModel) action);
         else if (action instanceof ActionCreateDirectory) this.platform.createDirectory((ActionCreateDirectory) action);
+        else if (action instanceof ActionPingAIEngine) this.platform.pingAIEngine((ActionPingAIEngine) action);
         else if (action instanceof ActionRunAIEngine) this.platform.runAIEngine((ActionRunAIEngine) action);
         else if (action instanceof ActionEndAIEngine) this.platform.endAIEngine((ActionEndAIEngine) action);
         else if (action instanceof ActionUpdateToRunning) this.platform.updateToRunning((ActionUpdateToRunning) action);

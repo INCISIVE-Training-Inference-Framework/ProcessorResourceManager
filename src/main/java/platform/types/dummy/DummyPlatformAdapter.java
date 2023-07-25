@@ -26,6 +26,9 @@ public class DummyPlatformAdapter implements PlatformAdapter {
     public void createDirectory(ActionCreateDirectory action) throws InternalException {}
 
     @Override
+    public void pingAIEngine(ActionPingAIEngine action) throws InternalException {}
+
+    @Override
     public void runAIEngine(ActionRunAIEngine action) throws InternalException {}
 
     @Override

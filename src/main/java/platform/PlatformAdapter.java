@@ -15,6 +15,8 @@ public interface PlatformAdapter {
 
     void createDirectory(ActionCreateDirectory action) throws InternalException;
 
+    void pingAIEngine(ActionPingAIEngine action) throws InternalException;
+
     void runAIEngine(ActionRunAIEngine action) throws InternalException;
 
     void endAIEngine(ActionEndAIEngine action) throws InternalException;

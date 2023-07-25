@@ -1,5 +1,6 @@
 package platform.types.incisive.actions;
 
+import config.actions.ActionPingAIEngine;
 import config.actions.ActionRunAIEngine;
 import exceptions.InternalException;
 import org.apache.logging.log4j.LogManager;
@@ -10,12 +11,16 @@ public class ActionRunAIEngineImplementation {
     private static final Logger logger = LogManager.getLogger(ActionRunAIEngineImplementation.class);
 
     public static void run(ActionRunAIEngine action) throws InternalException {
-        AuxiliaryRunAIEngine runAIEngine = new AuxiliaryRunAIEngine(
-                action.getMaxIterationTime(),
+        ActionPingAIEngine actionPingAIEngine = new ActionPingAIEngine(
+                "ping_ai_engine",
                 action.getMaxInitializationTime(),
                 action.getClientHost(),
+                action.getPingUrl()
+        );
+        AuxiliaryRunAIEngine runAIEngine = new AuxiliaryRunAIEngine(
+                action.getMaxIterationTime(),
+                action.getClientHost(),
                 action.getServerHost(),
-                action.getPingUrl(),
                 action.getRunUrl(),
                 action.getCallbackUrl()
         );
@@ -24,7 +29,7 @@ public class ActionRunAIEngineImplementation {
         try {
             runAIEngine.initialize();
             initialized = true;
-            runAIEngine.waitAIEngineToBeReady();
+            ActionPingAIEngineImplementation.run(actionPingAIEngine);
             runAIEngine.run(action.getUseCase());
         } catch (Exception e){
             exceptionThrown = true;
