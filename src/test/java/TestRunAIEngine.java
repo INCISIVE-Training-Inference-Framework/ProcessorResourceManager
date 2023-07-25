@@ -184,6 +184,110 @@ public class TestRunAIEngine {
     }
 
     @Test
+    public void runAIEngineFailedAIEngineResponseBadParsed() throws Exception {
+        // create mock
+        stubFor(get(urlEqualTo(runAIEngineAction.getPingUrl()))
+                .willReturn(aResponse().withStatus(200))
+        );
+        stubFor(post(urlEqualTo(String.format(
+                "%s?use_case=%s&callback_url=%s",
+                runAIEngineAction.getRunUrl(),
+                runAIEngineAction.getUseCase(),
+                String.format(
+                        "http://%s%s",
+                        runAIEngineAction.getServerHost(),
+                        runAIEngineAction.getCallbackUrl()
+                )
+        ))).willReturn(aResponse().withStatus(200)));
+
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(4000);
+                CloseableHttpClient client = HttpClients.createDefault();
+                String callbackUrl = String.format(
+                        "http://%s%s", runAIEngineAction.getServerHost(), runAIEngineAction.getCallbackUrl()
+                );
+                HttpPost httpPost = new HttpPost(callbackUrl);
+                String json = "{\"SUCCESS\": false}";
+                StringEntity entity = new StringEntity(json);
+                httpPost.setEntity(entity);
+                httpPost.setHeader("Accept", "application/json");
+                httpPost.setHeader("Content-type", "application/json");
+                client.execute(httpPost);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+
+        // run domain
+        Exception exception = assertThrows(InternalException.class, () -> {
+            String[] args = {runAIEngineActionString};
+            Namespace parsedArgs = Application.parseInputArgs(args);
+            List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
+            Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
+            PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
+        });
+
+        String expectedMessage = "Internal exception: Error while running use case. Error while parsing returning error message";
+        assertTrue(exception.getMessage().contains(expectedMessage));
+    }
+
+    @Test
+    public void runAIEngineFailedAIEngineError() throws Exception {
+        // create mock
+        stubFor(get(urlEqualTo(runAIEngineAction.getPingUrl()))
+                .willReturn(aResponse().withStatus(200))
+        );
+        stubFor(post(urlEqualTo(String.format(
+                "%s?use_case=%s&callback_url=%s",
+                runAIEngineAction.getRunUrl(),
+                runAIEngineAction.getUseCase(),
+                String.format(
+                        "http://%s%s",
+                        runAIEngineAction.getServerHost(),
+                        runAIEngineAction.getCallbackUrl()
+                )
+        ))).willReturn(aResponse().withStatus(200)));
+
+        Thread thread = new Thread(() -> {
+            try {
+                Thread.sleep(4000);
+                CloseableHttpClient client = HttpClients.createDefault();
+                String callbackUrl = String.format(
+                        "http://%s%s", runAIEngineAction.getServerHost(), runAIEngineAction.getCallbackUrl()
+                );
+                HttpPost httpPost = new HttpPost(callbackUrl);
+                String json = "{\"SUCCESS\": false, \"message\": \"user_vars.json file bad formatted\"}";
+                StringEntity entity = new StringEntity(json);
+                httpPost.setEntity(entity);
+                httpPost.setHeader("Accept", "application/json");
+                httpPost.setHeader("Content-type", "application/json");
+                client.execute(httpPost);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+
+        // run domain
+        Exception exception = assertThrows(InternalException.class, () -> {
+            String[] args = {runAIEngineActionString};
+            Namespace parsedArgs = Application.parseInputArgs(args);
+            List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
+            Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
+            PlatformAdapter platformAdapter = Factory.selectPlatformAdapter(initialConfig);
+            Domain domain = new Domain(platformAdapter);
+            domain.run(actions);
+        });
+
+        String expectedMessage = "Internal exception: Error while running use case. AI Engine error -> user_vars.json file bad formatted";
+        assertTrue(exception.getMessage().contains(expectedMessage));
+    }
+
+    @Test
     public void runAIEngineBadFormatted() throws Exception {
         // replace config with one that is bad formatted
         JSONObject auxiliaryAction = new JSONObject();

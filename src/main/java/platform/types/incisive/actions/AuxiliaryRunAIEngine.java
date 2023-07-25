@@ -16,6 +16,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 import utils.FileMethods;
 
@@ -185,7 +186,17 @@ public class AuxiliaryRunAIEngine {
             // check ack
             if (!received) throw new InternalException("Error while running use case. The end of the iteration was not notified on time", null);
             if (serverHandlingOutput == null) throw new InternalException("Error while running use case. The server did not save the response information", null);
-            if (!serverHandlingOutput.isGoodAck()) throw new InternalException(String.format("Error while running use case. %s", serverHandlingOutput.getMessage()), null);
+            if (!serverHandlingOutput.isGoodAck()) {
+                JSONObject errorMessageJson;
+                String errorMessage;
+                try {
+                    errorMessageJson = new JSONObject(serverHandlingOutput.getMessage());
+                    errorMessage = errorMessageJson.getString("message");
+                } catch (JSONException e) {
+                    throw new InternalException("Error while running use case. Error while parsing returning error message", e);
+                }
+                throw new InternalException(String.format("Error while running use case. AI Engine error -> %s", errorMessage), null);
+            }
 
         } catch (IOException e) {
             throw new InternalException("Error while running use case (during the query creation)", e);
@@ -224,7 +235,7 @@ public class AuxiliaryRunAIEngine {
                             goodAck = false;
                             message = jsonResponse.toString();
                         }
-                    } catch (IOException e) {
+                    } catch (IOException | JSONException e) {
                         goodAck = false;
                         responseStatus = 400;
                         message = String.format("Bad request: incorrect JSON format. %s", e.getMessage());
