@@ -3,6 +3,7 @@
     {
       "name": "download_external_data",
       "external_data_url": "http://localhost:8000/api/some_url/",
+      "download_resume_retries": 3,
       "output_path": "src/test/resources/tmp_download_external_data_tests/test/"
     }
   ]

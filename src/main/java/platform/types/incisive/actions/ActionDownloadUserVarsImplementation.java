@@ -12,7 +12,7 @@ public class ActionDownloadUserVarsImplementation {
 
     public static void run(ActionDownloadUserVars action) throws InternalException {
         try (FileOutputStream outputStream = new FileOutputStream(action.getOutputPath())) {
-            downloadFile(action.getUserVarsUrl(), outputStream);
+            downloadFile(action.getUserVarsUrl(), action.getDownloadResumeRetries(), outputStream);
         } catch (IOException e) {
             throw new InternalException("Error while downloading user vars", e);
         }

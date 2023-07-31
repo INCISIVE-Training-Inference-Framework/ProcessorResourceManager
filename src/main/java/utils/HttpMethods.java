@@ -64,7 +64,7 @@ public class HttpMethods {
         return multipartMethod(new HttpPatch(url), jsonEntity, fileNameList, fileEntityList, expectedStatusCode, errorMessage);
     }
 
-    public static void downloadFile(String url, OutputStream outputStream) throws IOException {
+    public static void downloadFile(String url, int totalAllowedResumeRetries, OutputStream outputStream) throws IOException {
         URL urlObject;
         try {
             urlObject = new URI(url).toURL();
@@ -75,10 +75,9 @@ public class HttpMethods {
         long fileLength = getExternalFileLength(urlObject);
         long totalReadBytes = 0;
 
-        int totalAllowedRetries = 3;
         int retries = 0;
 
-        while(totalReadBytes < fileLength && retries < totalAllowedRetries) {
+        while(totalReadBytes < fileLength && retries <= totalAllowedResumeRetries) {
             logger.info(String.format("Downloading file; read bytes %d; bytes to read: %d; retries: %d", totalReadBytes, fileLength, retries));
 
             HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();

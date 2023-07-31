@@ -16,7 +16,7 @@ public class ActionDownloadExternalDataImplementation {
     public static void run(config.actions.ActionDownloadExternalData action) throws InternalException {
         String temporalZippedFilePath = String.format("%s/tmp_zip_file", action.getOutputPath());
         try (FileOutputStream outputStream = new FileOutputStream(temporalZippedFilePath)) {
-            downloadFile(action.getExternalDataUrl(), outputStream);
+            downloadFile(action.getExternalDataUrl(), action.getDownloadResumeRetries(), outputStream);
         } catch (IOException e) {
             throw new InternalException("Error while downloading external data", e);
         }

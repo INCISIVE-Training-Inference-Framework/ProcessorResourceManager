@@ -109,7 +109,7 @@ public class TestDownloadUserVars {
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withStatus(400).withBody("")));
 
-        Exception exception = assertThrows(InternalException.class, () -> {
+        InternalException exception = assertThrows(InternalException.class, () -> {
             String[] args = {downloadUserVarsAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
@@ -119,7 +119,7 @@ public class TestDownloadUserVars {
             domain.run(actions);
         });
 
-        String expectedMessage = "Error while downloading user vars";
+        String expectedMessage = "Internal exception: Error while downloading user vars. Server returned HTTP response code: 400 for URL: http://localhost:8000/api/some_url/";
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
 

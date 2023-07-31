@@ -18,7 +18,7 @@ public class ActionDownloadAIModelImplementation {
         String temporalZippedFilePath = String.format("%s/tmp_zip_file", action.getOutputPath());
 
         try (FileOutputStream outputStream = new FileOutputStream(temporalZippedFilePath)) {
-            downloadFile(action.getAiModelUrl(), outputStream);
+            downloadFile(action.getAiModelUrl(), action.getDownloadResumeRetries(), outputStream);
         } catch (IOException e) {
             throw new InternalException("Error while downloading AI Model", e);
         }

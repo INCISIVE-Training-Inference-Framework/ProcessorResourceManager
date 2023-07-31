@@ -16,6 +16,12 @@ public class InternalException extends Exception {
         return exception;
     }
 
+    @Override
+    public String getMessage() {
+        if (this.exception != null) return String.format("%s. %s", super.getMessage(), this.exception.getMessage());
+        else return super.getMessage();
+    }
+
     public void print(Logger logger) {
         logger.error(this.getMessage());
         if (this.getException() != null) {

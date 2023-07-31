@@ -108,7 +108,7 @@ public class TestDownloadExternalData {
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withStatus(400).withBody("")));
 
-        Exception exception = assertThrows(InternalException.class, () -> {
+        InternalException exception = assertThrows(InternalException.class, () -> {
             String[] args = {downloadExternalDataAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
@@ -118,7 +118,7 @@ public class TestDownloadExternalData {
             domain.run(actions);
         });
 
-        String expectedMessage = "Error while downloading external data";
+        String expectedMessage = "Internal exception: Error while downloading external data. Server returned HTTP response code: 400 for URL: http://localhost:8000/api/some_url/";
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
 

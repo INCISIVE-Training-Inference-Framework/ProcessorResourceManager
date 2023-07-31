@@ -138,7 +138,7 @@ public class TestDownloadAIModel {
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse().withStatus(400).withBody("")));
 
-        Exception exception = assertThrows(InternalException.class, () -> {
+        InternalException exception = assertThrows(InternalException.class, () -> {
             String[] args = {downloadAIModelAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
@@ -148,23 +148,40 @@ public class TestDownloadAIModel {
             domain.run(actions);
         });
 
-        String expectedMessage = "Error while downloading AI Model";
+        String expectedMessage = "Internal exception: Error while downloading AI Model. Server returned HTTP response code: 400 for URL: http://localhost:8000/api/some_url/";
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
 
     @Test
-    public void downloadAIModelFailedNoMoreRetries() throws Exception {
+    public void downloadAIModelFailedNoMoreResumeRetries() throws Exception {
         // create mock
+        byte[] bytes = byteArrayOutputStream.toByteArray();
+        int bytesSplit = bytes.length / 4;
         stubFor(head(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse()
-                        .withHeader("content-length", String.valueOf(byteArrayOutputStream.toByteArray().length + 10))
+                        .withHeader("content-length", String.valueOf(bytes.length))
                 ));
         stubFor(get(urlEqualTo("/api/some_url/"))
                 .willReturn(aResponse()
-                        .withBody(byteArrayOutputStream.toByteArray())
+                        .withBody(Arrays.copyOfRange(bytes, 0, bytesSplit))
+                ));
+        stubFor(get(urlEqualTo("/api/some_url/")).withHeader("range", equalTo(String.format("bytes=%d-%d", bytesSplit, bytes.length)))
+                .willReturn(aResponse()
+                        .withStatus(206)
+                        .withBody(Arrays.copyOfRange(bytes, bytesSplit, bytesSplit * 2))
+                ));
+        stubFor(get(urlEqualTo("/api/some_url/")).withHeader("range", equalTo(String.format("bytes=%d-%d", bytesSplit * 2, bytes.length)))
+                .willReturn(aResponse()
+                        .withStatus(206)
+                        .withBody(Arrays.copyOfRange(bytes, bytesSplit * 2, bytesSplit * 3))
+                ));
+        stubFor(get(urlEqualTo("/api/some_url/")).withHeader("range", equalTo(String.format("bytes=%d-%d", bytesSplit * 3, bytes.length)))
+                .willReturn(aResponse()
+                        .withStatus(206)
+                        .withBody(Arrays.copyOfRange(bytes, bytesSplit * 3, bytes.length))
                 ));
 
-        Exception exception = assertThrows(InternalException.class, () -> {
+        InternalException exception = assertThrows(InternalException.class, () -> {
             String[] args = {downloadAIModelAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
@@ -174,7 +191,7 @@ public class TestDownloadAIModel {
             domain.run(actions);
         });
 
-        String expectedMessage = "Error while downloading AI Model";
+        String expectedMessage = "Internal exception: Error while downloading AI Model. Error download file; real size: 368; downloaded size: 276";
         assertTrue(exception.getMessage().contains(expectedMessage));
     }
 
