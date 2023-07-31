@@ -62,8 +62,8 @@ public class TestUpdateToSucceeded {
 
         // create dummy Generic File
         Files.createDirectory(Paths.get(testsRootDirectory + "dummy_generic_file"));
-        Files.createFile(Paths.get(testsRootDirectory + "dummy_ai_model/image1.png"));
-        Files.createFile(Paths.get(testsRootDirectory + "dummy_ai_model/image2.png"));
+        Files.createFile(Paths.get(testsRootDirectory + "dummy_generic_file/image1.png"));
+        Files.createFile(Paths.get(testsRootDirectory + "dummy_generic_file/image2.png"));
     }
 
     @Before

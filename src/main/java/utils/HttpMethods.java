@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -45,7 +46,7 @@ public class HttpMethods {
             String url,
             JSONObject jsonEntity,
             List<String> fileNameList,
-            List<byte[]> fileEntityList,
+            List<File> fileEntityList,
             Set<Integer> expectedStatusCode,
             String errorMessage
     ) throws InternalException {
@@ -56,7 +57,7 @@ public class HttpMethods {
             String url,
             JSONObject jsonEntity,
             List<String> fileNameList,
-            List<byte[]> fileEntityList,
+            List<File> fileEntityList,
             Set<Integer> expectedStatusCode,
             String errorMessage
     ) throws InternalException {
@@ -134,7 +135,7 @@ public class HttpMethods {
             HttpEntityEnclosingRequestBase httpMethod,
             JSONObject jsonEntity,
             List<String> fileNameList,
-            List<byte[]> fileEntityList,
+            List<File> fileEntityList,
             Set<Integer> expectedStatusCode,
             String errorMessage
     ) throws InternalException {

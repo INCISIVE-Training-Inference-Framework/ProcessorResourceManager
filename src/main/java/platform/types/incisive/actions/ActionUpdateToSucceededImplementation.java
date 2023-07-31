@@ -2,16 +2,14 @@ package platform.types.incisive.actions;
 
 import config.actions.ActionUpdateToSucceeded;
 import exceptions.InternalException;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,6 +26,8 @@ import static utils.ZipCompression.zipFile;
 
 public class ActionUpdateToSucceededImplementation {
 
+    private static final Path auxiliaryDirectory = Path.of("./src/main/resources/auxiliary_elements/action_update_to_succeeded");
+
     private static final Logger logger = LogManager.getLogger(ActionUpdateToSucceededImplementation.class);
 
     public static void run(ActionUpdateToSucceeded action) throws InternalException {
@@ -36,27 +36,32 @@ public class ActionUpdateToSucceededImplementation {
         List<Integer> createdEvaluationMetrics = new ArrayList<>();
         List<Integer> createdGenericFiles = new ArrayList<>();
 
+        // assure auxiliary directory is created
+        try {
+            Files.createDirectories(auxiliaryDirectory);
+        } catch (IOException e) {
+            throw new InternalException("Error while creating auxiliary directory", e);
+        }
+
         InternalException exceptionThrown = null;
         try {
             if (action.isUploadAIModel()) {
                 logger.debug("Uploading AI Model");
-                byte[] modelBytes;
-                try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                File modelFile = Path.of(auxiliaryDirectory.toString(), "model_contents.zip").toFile();
+                try (FileOutputStream outputStream = new FileOutputStream(modelFile)) {
                     zipFile(action.getAiModelUploadPath(), outputStream);
-                    modelBytes = outputStream.toByteArray();
                 } catch (IOException e) {
                     throw new InternalException("Error while retrieving AI Model", e);
                 }
 
-                Path userVarsPath = Paths.get(action.getAiModelUserVarsPath());
-                byte[] userVarsBytes = Files.readAllBytes(userVarsPath);
+                File userVarsFile = Paths.get(action.getAiModelUserVarsPath()).toFile();
 
                 List<String> fileNameList = new ArrayList<>();
-                List<byte[]> fileEntityList = new ArrayList<>();
+                List<File> fileEntityList = new ArrayList<>();
                 fileNameList.add("contents");
                 fileNameList.add("ai_engine_version_user_vars");
-                fileEntityList.add(modelBytes);
-                fileEntityList.add(userVarsBytes);
+                fileEntityList.add(modelFile);
+                fileEntityList.add(userVarsFile);
 
                 Set<Integer> expectedStatusCode = new HashSet<>();
                 expectedStatusCode.add(200);
@@ -139,18 +144,17 @@ public class ActionUpdateToSucceededImplementation {
 
             if (action.isUploadGenericFile()) {
                 logger.debug("Uploading Generic File");
-                byte[] genericFileBytes;
-                try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                File genericFile = Path.of(auxiliaryDirectory.toString(), "generic_file_contents.zip").toFile();
+                try (FileOutputStream outputStream = new FileOutputStream(genericFile)) {
                     zipFile(action.getGenericFileUploadPath(), outputStream);
-                    genericFileBytes = outputStream.toByteArray();
                 } catch (IOException e) {
                     throw new InternalException("Error while retrieving Generic File", e);
                 }
 
                 List<String> fileNameList = new ArrayList<>();
-                List<byte[]> fileEntityList = new ArrayList<>();
+                List<File> fileEntityList = new ArrayList<>();
                 fileNameList.add("contents");
-                fileEntityList.add(genericFileBytes);
+                fileEntityList.add(genericFile);
 
                 Set<Integer> expectedStatusCode = new HashSet<>();
                 expectedStatusCode.add(201);
@@ -187,6 +191,20 @@ public class ActionUpdateToSucceededImplementation {
             exceptionThrown = e2;
             throw e2;
         } finally {
+            // clean and delete auxiliary directory
+            boolean missingExceptionThrow = false;
+            try {
+                FileUtils.cleanDirectory(auxiliaryDirectory.toFile());
+                FileUtils.deleteDirectory(auxiliaryDirectory.toFile());
+            } catch (IOException e) {
+                InternalException exception = new InternalException("Error while cleaning and deleting auxiliary directory", e);
+                if (exceptionThrown == null) {
+                    exceptionThrown = exception;
+                    missingExceptionThrow = true;
+                }
+                else exception.print(logger);
+            }
+
             if (exceptionThrown != null) {
                 logger.error("Deleting already created elements");
                 Set<Integer> expectedStatusCode = new HashSet<>();
@@ -219,6 +237,8 @@ public class ActionUpdateToSucceededImplementation {
                     }
                 }
             }
+
+            if (missingExceptionThrow) throw exceptionThrown;
         }
     }
 }
