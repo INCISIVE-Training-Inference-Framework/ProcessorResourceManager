@@ -23,6 +23,7 @@ public class ActionUpdateToSucceeded extends Action {
     private final String evaluationMetricUploadUrl;
     private final String evaluationMetricDeleteUrl;
     private final String evaluationMetricsUploadPath;
+    private final JSONObject evaluationMetricPatientsInfo;
     private final JSONObject evaluationMetricUploadMetadata;
 
     private final String genericFileUploadUrl;
@@ -46,6 +47,7 @@ public class ActionUpdateToSucceeded extends Action {
             String evaluationMetricUploadUrl,
             String evaluationMetricDeleteUrl,
             String evaluationMetricsUploadPath,
+            JSONObject evaluationMetricPatientsInfo,
             JSONObject evaluationMetricUploadMetadata,
             String genericFileUploadUrl,
             String genericFileDeleteUrl,
@@ -67,6 +69,7 @@ public class ActionUpdateToSucceeded extends Action {
         this.evaluationMetricUploadUrl = evaluationMetricUploadUrl;
         this.evaluationMetricDeleteUrl = evaluationMetricDeleteUrl;
         this.evaluationMetricsUploadPath = evaluationMetricsUploadPath;
+        this.evaluationMetricPatientsInfo = evaluationMetricPatientsInfo;
         this.evaluationMetricUploadMetadata = evaluationMetricUploadMetadata;
         this.genericFileUploadUrl = genericFileUploadUrl;
         this.genericFileDeleteUrl = genericFileDeleteUrl;
@@ -130,6 +133,10 @@ public class ActionUpdateToSucceeded extends Action {
         return evaluationMetricsUploadPath;
     }
 
+    public JSONObject getEvaluationMetricPatientsInfo() {
+        return evaluationMetricPatientsInfo;
+    }
+
     public JSONObject getEvaluationMetricUploadMetadata() {
         return evaluationMetricUploadMetadata;
     }
@@ -167,6 +174,7 @@ public class ActionUpdateToSucceeded extends Action {
                 ", evaluationMetricUploadUrl='" + evaluationMetricUploadUrl + '\'' +
                 ", evaluationMetricDeleteUrl='" + evaluationMetricDeleteUrl + '\'' +
                 ", evaluationMetricsUploadPath='" + evaluationMetricsUploadPath + '\'' +
+                ", evaluationMetricPatientsInfo=" + evaluationMetricPatientsInfo +
                 ", evaluationMetricUploadMetadata=" + evaluationMetricUploadMetadata +
                 ", genericFileUploadUrl='" + genericFileUploadUrl + '\'' +
                 ", genericFileDeleteUrl='" + genericFileDeleteUrl + '\'' +
@@ -192,6 +200,7 @@ public class ActionUpdateToSucceeded extends Action {
             String evaluationMetricUploadUrl = null;
             String evaluationMetricDeleteUrl = null;
             String evaluationMetricsUploadPath = null;
+            JSONObject evaluationMetricPatientsInfo = null;
             JSONObject evaluationMetricUploadMetadata = null;
             String genericFileUploadUrl = null;
             String genericFileDeleteUrl = null;
@@ -214,6 +223,9 @@ public class ActionUpdateToSucceeded extends Action {
                 evaluationMetricUploadUrl = inputJson.getString("evaluation_metrics_upload_url");
                 evaluationMetricDeleteUrl = inputJson.getString("evaluation_metrics_delete_url");
                 evaluationMetricsUploadPath = inputJson.getString("evaluation_metrics_upload_path");
+                if (evaluationMetricMultiple) {
+                    evaluationMetricPatientsInfo = inputJson.getJSONObject("evaluation_metrics_patients_info");
+                }
                 evaluationMetricUploadMetadata = inputJson.getJSONObject("evaluation_metrics_upload_metadata");
             }
             if (uploadGenericFile) {
@@ -238,6 +250,7 @@ public class ActionUpdateToSucceeded extends Action {
                     evaluationMetricUploadUrl,
                     evaluationMetricDeleteUrl,
                     evaluationMetricsUploadPath,
+                    evaluationMetricPatientsInfo,
                     evaluationMetricUploadMetadata,
                     genericFileUploadUrl,
                     genericFileDeleteUrl,

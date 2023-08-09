@@ -12,6 +12,10 @@
       "evaluation_metrics_upload_url": "http://localhost:8000/api/upload_evaluation_metric/",
       "evaluation_metrics_delete_url": "http://localhost:8000/api/delete_evaluation_metric/",
       "evaluation_metrics_upload_path": "src/test/resources/tmp_update_to_succeeded_tests/evaluation_metrics/",
+      "evaluation_metrics_patients_info": {
+        "data-partner-1": ["patient_1", "patient_2"],
+        "data-partner-2": ["patient_3"]
+      },
       "evaluation_metrics_upload_metadata": {}
     }
   ]

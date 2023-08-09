@@ -100,7 +100,9 @@ public class ActionUpdateToSucceededImplementation {
                             try (InputStream inputStream = new FileInputStream(path.toFile())) {
                                 evaluationMetricsGeneral = readJson(inputStream);
                                 JSONArray evaluationMetricsArrayTemp = evaluationMetricsGeneral.getJSONArray("evaluation_metrics");
-                                JSONObject dataPartnersPatients = new JSONObject(String.format("{\"%s\": [\"null\"]}", path.getFileName().toString().replaceAll(".json", "")));
+                                String dataPartnerId = path.getFileName().toString().replaceAll(".json", "");
+                                JSONObject dataPartnersPatients = new JSONObject();
+                                dataPartnersPatients.put(dataPartnerId, action.getEvaluationMetricPatientsInfo().getJSONArray(dataPartnerId));
                                 for (Object item: evaluationMetricsArrayTemp) {
                                     JSONObject itemJson = (JSONObject) item;
                                     itemJson.put("data_partners_patients", dataPartnersPatients);

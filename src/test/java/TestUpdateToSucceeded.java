@@ -236,7 +236,7 @@ public class TestUpdateToSucceeded {
                         {
                             "ai_model": 3,
                             "name": "accuracy",
-                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "data_partners_patients": {"data-partner-1": ["patient_1", "patient_2"]},
                             "value": 0,
                             "description": "dummy description"
                         }
@@ -249,7 +249,7 @@ public class TestUpdateToSucceeded {
                         {
                             "ai_model": 3,
                             "name": "f1-score",
-                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "data_partners_patients": {"data-partner-1": ["patient_1", "patient_2"]},
                             "value": 0
                         }
                         """
@@ -261,7 +261,7 @@ public class TestUpdateToSucceeded {
                         {
                             "ai_model": 3,
                             "name": "f2-score",
-                            "data_partners_patients": {"data-partner-2": ["null"]},
+                            "data_partners_patients": {"data-partner-2": ["patient_3"]},
                             "value": 0
                         }
                         """
@@ -437,7 +437,7 @@ public class TestUpdateToSucceeded {
                         {
                             "ai_model": 1,
                             "name": "accuracy",
-                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "data_partners_patients": {"data-partner-1": ["patient_1", "patient_2"]},
                             "value": 0,
                             "description": "dummy description"
                         }
@@ -450,7 +450,7 @@ public class TestUpdateToSucceeded {
                         {
                             "ai_model": 1,
                             "name": "f1-score",
-                            "data_partners_patients": {"data-partner-1": ["null"]},
+                            "data_partners_patients": {"data-partner-1": ["patient_1", "patient_2"]},
                             "value": 0
                         }
                         """
@@ -462,7 +462,7 @@ public class TestUpdateToSucceeded {
                         {
                             "ai_model": 1,
                             "name": "f2-score",
-                            "data_partners_patients": {"data-partner-2": ["null"]},
+                            "data_partners_patients": {"data-partner-2": ["patient_3"]},
                             "value": 0
                         }
                         """
