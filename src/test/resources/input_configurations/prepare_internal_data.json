@@ -1,0 +1,9 @@
+{
+  "actions": [
+    {
+      "name": "prepare_internal_data",
+      "output_path": "src/test/resources/tmp_prepare_internal_data_tests/test",
+      "information_url": "http://localhost:8000/api/some_url/"
+    }
+  ]
+}

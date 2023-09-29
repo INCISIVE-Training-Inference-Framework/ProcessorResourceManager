@@ -8,6 +8,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,6 +40,16 @@ public class HttpMethods {
             return responseHandling(client, httpPost, expectedStatusCode, errorMessage);
         } catch (IOException e) {
             throw new InternalException(String.format("%s. Error during post creation", errorMessage), e);
+        }
+    }
+
+    public static JSONObject retrieveJsonMethod(String url, Set<Integer> expectedStatusCode, String errorMessage) throws InternalException {
+        try(CloseableHttpClient client = HttpClientBuilder.create().build()) {
+            HttpGet httpGet = new HttpGet(url);
+            httpGet.addHeader("Accept", "application/json");
+            return responseHandling(client, httpGet, expectedStatusCode, errorMessage);
+        } catch (IOException e) {
+            throw new InternalException(String.format("%s. Error during get creation", errorMessage), e);
         }
     }
 
@@ -160,7 +171,7 @@ public class HttpMethods {
 
     private static JSONObject responseHandling(
             CloseableHttpClient client,
-            HttpEntityEnclosingRequestBase httpMethod,
+            HttpUriRequest httpMethod,
             Set<Integer> expectedStatusCode,
             String errorMessage
     ) throws InternalException {

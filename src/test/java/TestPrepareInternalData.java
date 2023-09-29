@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertEquals;
 
 
@@ -58,8 +59,13 @@ public class TestPrepareInternalData {
     @Test
     public void prepareInternalDataSuccessBreast() throws Exception {
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_breast.json")));
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data.json")));
         JSONObject prepareInternalDataAction = new JSONObject(content);
+
+        // create mock
+        JSONObject data_partner_information = new JSONObject(new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_breast_data_partner_information.json"))));
+        stubFor(get(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse().withStatus(200).withBody(data_partner_information.toString())));
 
         // run domain
         String[] args = {prepareInternalDataAction.toString()};
@@ -73,8 +79,13 @@ public class TestPrepareInternalData {
     @Test
     public void prepareInternalDataSuccessLung() throws Exception {
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_lung.json")));
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data.json")));
         JSONObject prepareInternalDataAction = new JSONObject(content);
+
+        // create mock
+        JSONObject data_partner_information = new JSONObject(new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_lung_data_partner_information.json"))));
+        stubFor(get(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse().withStatus(200).withBody(data_partner_information.toString())));
 
         // run domain
         String[] args = {prepareInternalDataAction.toString()};
@@ -88,8 +99,13 @@ public class TestPrepareInternalData {
     @Test
     public void prepareInternalDataSuccessProstate() throws Exception {
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_prostate.json")));
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data.json")));
         JSONObject prepareInternalDataAction = new JSONObject(content);
+
+        // create mock
+        JSONObject data_partner_information = new JSONObject(new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_prostate_data_partner_information.json"))));
+        stubFor(get(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse().withStatus(200).withBody(data_partner_information.toString())));
 
         // run domain
         String[] args = {prepareInternalDataAction.toString()};
@@ -103,8 +119,13 @@ public class TestPrepareInternalData {
     @Test
     public void prepareInternalDataSuccessColorectal() throws Exception {
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_colorectal.json")));
+        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data.json")));
         JSONObject prepareInternalDataAction = new JSONObject(content);
+
+        // create mock
+        JSONObject data_partner_information = new JSONObject(new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/prepare_internal_data_colorectal_data_partner_information.json"))));
+        stubFor(get(urlEqualTo("/api/some_url/"))
+                .willReturn(aResponse().withStatus(200).withBody(data_partner_information.toString())));
 
         // run domain
         String[] args = {prepareInternalDataAction.toString()};

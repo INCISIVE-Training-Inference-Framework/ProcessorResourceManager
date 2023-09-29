@@ -19,12 +19,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static utils.FileMethods.readJson;
+import static utils.HttpMethods.retrieveJsonMethod;
 
 public class ActionPrepareInternalDataImplementation {
 
@@ -40,10 +38,10 @@ public class ActionPrepareInternalDataImplementation {
         private final Map<String, Object> sheetStartPositionsLinks;
         private final Map<String, Object> sheetNamesLinks;
 
-        public CancerTypeLinksData(String cancerType, ActionPrepareInternalData action) throws IOException {
+        public CancerTypeLinksData(String cancerType, JSONObject dataPartnerInformation) throws IOException {
             String internalPath = String.format("%s/%s", INTERNAL_DATA_CANCER_PATHS, cancerType);
-            JSONObject columnNamesLinksJson = action.getInformation().getJSONObject("fields_definition").getJSONObject(cancerType);
-            JSONObject sheetNamesLinksJson = action.getInformation().getJSONObject("sheets_definition");
+            JSONObject columnNamesLinksJson = dataPartnerInformation.getJSONObject("fields_definition").getJSONObject(cancerType);
+            JSONObject sheetNamesLinksJson = dataPartnerInformation.getJSONObject("sheets_definition");
             JSONObject columnPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_column_positions.json", internalPath)));
             JSONObject sheetPositionLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_positions.json", internalPath)));
             JSONObject sheetStartPositionsLinksJson = readJson(new FileInputStream(String.format("%s/link_sheet_start_positions.json", internalPath)));
@@ -84,10 +82,19 @@ public class ActionPrepareInternalDataImplementation {
         List<FileInputStream> cancerInputStreams = new ArrayList<>();
         Map<String, XSSFWorkbook> cancerWorkbooks = new HashMap<>();
         try {
+            // download data partner information
+            Set<Integer> expectedStatusCode = new HashSet<>();
+            expectedStatusCode.add(200);
+            JSONObject dataPartnerInformation = retrieveJsonMethod(
+                    action.getInformationUrl(),
+                    expectedStatusCode,
+                    "Error while retrieving information from data partner"
+            );
+
             // load links information
             Map<String, CancerTypeLinksData> cancerLinksDatas = new HashMap<>();
             for (String cancerType: CANCER_TYPES) {
-                cancerLinksDatas.put(cancerType, new CancerTypeLinksData(cancerType, action));
+                cancerLinksDatas.put(cancerType, new CancerTypeLinksData(cancerType, dataPartnerInformation));
             }
 
             // copy templates files to final location and open them
@@ -113,7 +120,7 @@ public class ActionPrepareInternalDataImplementation {
                 XSSFWorkbook cancerWorkbook = cancerWorkbooks.get(cancerType);
                 CancerTypeLinksData cancerLinksData = cancerLinksDatas.get(cancerType);
 
-                JSONArray patientsInformation = action.getInformation().getJSONArray("patients");
+                JSONArray patientsInformation = dataPartnerInformation.getJSONArray("patients");
                 for (int i = 0; i < patientsInformation.length(); i++) {
                     JSONObject patient = patientsInformation.getJSONObject(i);
 
