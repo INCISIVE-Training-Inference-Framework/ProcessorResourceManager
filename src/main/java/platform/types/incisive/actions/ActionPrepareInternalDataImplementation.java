@@ -253,6 +253,8 @@ public class ActionPrepareInternalDataImplementation {
                     }
                 });
             }
+
+            sheetStartPositionsLinks.put(sheetName, initialRowPosition);
         }
     }
 }
