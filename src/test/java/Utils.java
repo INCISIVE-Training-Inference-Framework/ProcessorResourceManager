@@ -20,6 +20,7 @@ public class Utils {
                 }
             }
         }
+        directoryFiles.sort(null);
         return directoryFiles;
     }
 }

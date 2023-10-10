@@ -6,6 +6,7 @@ import org.junit.*;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -67,7 +68,9 @@ public class TestPrepareInternalData {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
     @Test
@@ -82,7 +85,10 @@ public class TestPrepareInternalData {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
+
     }
 
     @Test
@@ -97,7 +103,9 @@ public class TestPrepareInternalData {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
     @Test
@@ -112,7 +120,9 @@ public class TestPrepareInternalData {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(List.of("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("Lung_Cancer.xlsx", "Prostate_Cancer.xlsx", "Breast_Cancer.xlsx", "Colorectal_Cancer.xlsx");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
 }

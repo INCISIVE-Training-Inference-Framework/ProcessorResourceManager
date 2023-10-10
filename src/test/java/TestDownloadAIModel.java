@@ -98,7 +98,9 @@ public class TestDownloadAIModel {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(Arrays.asList("tmp", "image1.png", "image2.png"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("tmp", "image1.png", "image2.png");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
     @Test
@@ -125,7 +127,9 @@ public class TestDownloadAIModel {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(Arrays.asList("tmp", "image1.png", "image2.png"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("tmp", "image1.png", "image2.png");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
     @Test
