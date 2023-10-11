@@ -77,7 +77,9 @@ public class TestZipUtils {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectorySpecific + "unzipped_file");
-        assertEquals(Arrays.asList("tmp", "image1.png", "image2.png", "tmp", "image3.png"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("tmp", "image1.png", "image2.png", "tmp", "image3.png");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
     @Test
@@ -105,7 +107,9 @@ public class TestZipUtils {
 
         // assure files are ok
         List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectorySpecific + "unzipped_file");
-        assertEquals(Arrays.asList("image1.png", "image2.png", "tmp", "image3.png"), directoryFiles);
+        List<String> expectedDirectoryFiles = Arrays.asList("image1.png", "image2.png", "tmp", "image3.png");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
     // TODO check only one file
