@@ -1,6 +1,5 @@
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import config.actions.Action;
-import config.actions.ActionUpdateToRunning;
 import exceptions.BadInputParametersException;
 import exceptions.InternalException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -11,6 +10,7 @@ import org.junit.*;
 import platform.PlatformAdapter;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -22,50 +22,53 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class TestUpdateToRunning {
+    public static final String EXPERIMENTS_MAIN_NAME = "update_to_running";
+
+    public static final Path jsonActionPath = Paths.get("src/test/resources/input_configurations", String.format("%s.json", EXPERIMENTS_MAIN_NAME));
+    public static final Path testsRootDirectoryPath = Paths.get(String.format("src/test/resources/tmp_%s_tests/", EXPERIMENTS_MAIN_NAME));
+    private static final Path testIndividualDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "test");
+    public JSONObject jsonAction;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(options().port(8000), false);
-    public String updateToRunningActionString;
-    public ActionUpdateToRunning updateToRunningAction;
-    public static String testsRootDirectory = "src/test/resources/tmp_update_to_running_tests/";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        if (Files.exists(Paths.get(testsRootDirectory))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory));
+        Files.createDirectory(testsRootDirectoryPath);
     }
 
     @Before
     public void before() throws Exception {
         // create directory for specific test
-        if (Files.exists(Paths.get(testsRootDirectory + "test"))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        if (Files.exists(testIndividualDirectoryPath)) {
+            FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory + "test"));
-
+        Files.createDirectory(testIndividualDirectoryPath);
 
         // load default input json
-        updateToRunningActionString = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/update_to_running.json")));
-        List<Action> actions = Action.parseInputActions(new JSONObject(updateToRunningActionString));
-        updateToRunningAction = (ActionUpdateToRunning) actions.get(0);
+        String content = new String(Files.readAllBytes(jsonActionPath));
+        jsonAction = new JSONObject(content);
     }
 
     @After
     public void after() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+        FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
+        }
     }
 
     @Test
@@ -80,7 +83,7 @@ public class TestUpdateToRunning {
                 .willReturn(aResponse().withStatus(200).withBody("{}")));
 
         // run domain
-        String[] args = {updateToRunningActionString};
+        String[] args = {jsonAction.toString()};
         Application.main(args);
     }
 
@@ -88,7 +91,7 @@ public class TestUpdateToRunning {
     @Test
     public void updateToRunningFailed() throws Exception {
         Exception exception = assertThrows(InternalException.class, () -> {
-            String[] args = {updateToRunningActionString};
+            String[] args = {jsonAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());

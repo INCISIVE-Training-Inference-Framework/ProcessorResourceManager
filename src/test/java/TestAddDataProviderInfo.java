@@ -18,21 +18,26 @@ import static config.environment.EnvironmentVariable.loadEnvironmentVariables;
 import static org.junit.Assert.*;
 
 public class TestAddDataProviderInfo {
-    public JSONObject addDataProviderInfoAction;
+    public static final String EXPERIMENTS_MAIN_NAME = "add_data_provider_info";
+
+    public static final Path jsonActionPath = Paths.get("src/test/resources/input_configurations", String.format("%s.json", EXPERIMENTS_MAIN_NAME));
+    public static final Path testsRootDirectoryPath = Paths.get(String.format("src/test/resources/tmp_%s_tests/", EXPERIMENTS_MAIN_NAME));
+    private static final Path testIndividualDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "test");
+    public JSONObject jsonAction;
+
     public static Path configFilePath;
     public static JSONObject configContents;
-    public static String testsRootDirectory = "src/test/resources/tmp_add_data_provider_info_tests/";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        if (Files.exists(Paths.get(testsRootDirectory))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory));
+        Files.createDirectory(testsRootDirectoryPath);
 
         // create dummy config file
-        configFilePath = Paths.get(testsRootDirectory + "platform_vars.json");
+        configFilePath = Paths.get(testsRootDirectoryPath.toString(), "platform_vars.json");
         Files.createFile(configFilePath);
         List<String> lines = List.of("{\"something\": \"something\", \"another\": \"another\"}");
         Files.write(configFilePath, lines, StandardCharsets.UTF_8);
@@ -43,43 +48,45 @@ public class TestAddDataProviderInfo {
     @Before
     public void before() throws Exception {
         // create directory for specific test
-        if (Files.exists(Paths.get(testsRootDirectory + "test"))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        if (Files.exists(testIndividualDirectoryPath)) {
+            FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory + "test"));
+        Files.createDirectory(testIndividualDirectoryPath);
 
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/add_data_provider_info.json")));
-        addDataProviderInfoAction = new JSONObject(content);
+        String content = new String(Files.readAllBytes(jsonActionPath));
+        jsonAction = new JSONObject(content);
     }
 
     @After
     public void after() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+        FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
+        }
     }
 
     @Test
     public void setAddDataProviderInfoSuccess() throws Exception {
         // run domain
-        String[] args = {addDataProviderInfoAction.toString()};
+        String[] args = {jsonAction.toString()};
         Application.main(args);
 
         // assure files are ok
-        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
+        List<String> directoryFiles = Utils.listDirectoryFiles(testIndividualDirectoryPath.toString());
         assertEquals(List.of("platform_vars.json"), directoryFiles);
 
         // assure config contents are ok
-        byte[] actualConfigBytes = Files.readAllBytes(Paths.get(testsRootDirectory + "test/platform_vars.json"));
+        byte[] actualConfigBytes = Files.readAllBytes(Paths.get(testIndividualDirectoryPath.toString(), "platform_vars.json"));
         JSONObject actualConfig = new JSONObject(new String(actualConfigBytes, StandardCharsets.UTF_8));
         assertEquals(configContents.toString(), actualConfig.toString());
     }
@@ -87,18 +94,18 @@ public class TestAddDataProviderInfo {
     @Test
     public void setAddDataProviderInfoStrangeNodeFixSuccess() throws Exception {
         // change config
-        addDataProviderInfoAction.getJSONArray("actions").getJSONObject(0).put("data_provider", "uns-rm2");
+        jsonAction.getJSONArray("actions").getJSONObject(0).put("data_provider", "uns-rm2");
 
         // run domain
-        String[] args = {addDataProviderInfoAction.toString()};
+        String[] args = {jsonAction.toString()};
         Application.main(args);
 
         // assure files are ok
-        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
+        List<String> directoryFiles = Utils.listDirectoryFiles(testIndividualDirectoryPath.toString());
         assertEquals(List.of("platform_vars.json"), directoryFiles);
 
         // assure config contents are ok
-        byte[] actualConfigBytes = Files.readAllBytes(Paths.get(testsRootDirectory + "test/platform_vars.json"));
+        byte[] actualConfigBytes = Files.readAllBytes(Paths.get(testIndividualDirectoryPath.toString(), "platform_vars.json"));
         JSONObject actualConfig = new JSONObject(new String(actualConfigBytes, StandardCharsets.UTF_8));
         assertEquals(configContents.toString(), actualConfig.toString());
     }
@@ -106,8 +113,8 @@ public class TestAddDataProviderInfo {
 
     @Test
     public void addDataProviderInfoFailed() throws Exception {
-        JSONObject addDataProviderInfoActionFailed = new JSONObject(addDataProviderInfoAction.toString());
-        addDataProviderInfoActionFailed.getJSONArray("actions").getJSONObject(0).put("read_file_path", "src/test/resources/tmp_add_data_provider_info_tests/test/not_exist.json");
+        JSONObject addDataProviderInfoActionFailed = new JSONObject(jsonAction.toString());
+        addDataProviderInfoActionFailed.getJSONArray("actions").getJSONObject(0).put("read_file_path", "does_not_exist.json");
         Exception exception = assertThrows(InternalException.class, () -> {
             String[] args = {addDataProviderInfoActionFailed.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
@@ -125,7 +132,7 @@ public class TestAddDataProviderInfo {
     @Test
     public void addDataProviderInfoBadFormatted() throws Exception {
         // replace config with one that is bad formatted
-        JSONObject addDataProviderInfoActionBadFormatted = new JSONObject(addDataProviderInfoAction.toString());
+        JSONObject addDataProviderInfoActionBadFormatted = new JSONObject(jsonAction.toString());
         addDataProviderInfoActionBadFormatted.getJSONArray("actions").getJSONObject(0).remove("data_provider");
 
         Exception exception = assertThrows(BadInputParametersException.class, () -> {

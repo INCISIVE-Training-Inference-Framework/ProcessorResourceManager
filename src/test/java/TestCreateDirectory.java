@@ -8,6 +8,7 @@ import org.junit.*;
 import platform.PlatformAdapter;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -17,56 +18,61 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class TestCreateDirectory {
+    public static final String EXPERIMENTS_MAIN_NAME = "create_directory";
 
-    public JSONObject downloadCreateDirectoryAction;
-    public static String testsRootDirectory = "src/test/resources/tmp_create_directory_tests/";
+    public static final Path jsonActionPath = Paths.get("src/test/resources/input_configurations", String.format("%s.json", EXPERIMENTS_MAIN_NAME));
+    public static final Path testsRootDirectoryPath = Paths.get(String.format("src/test/resources/tmp_%s_tests/", EXPERIMENTS_MAIN_NAME));
+    private static final Path testIndividualDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "test");
+    public JSONObject jsonAction;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        if (Files.exists(Paths.get(testsRootDirectory))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory));
+        Files.createDirectory(testsRootDirectoryPath);
     }
 
     @Before
     public void before() throws Exception {
         // create directory for specific test
-        if (Files.exists(Paths.get(testsRootDirectory + "test"))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        if (Files.exists(testIndividualDirectoryPath)) {
+            FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory + "test"));
+        Files.createDirectory(testIndividualDirectoryPath);
 
 
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/create_directory.json")));
-        downloadCreateDirectoryAction = new JSONObject(content);
+        String content = new String(Files.readAllBytes(jsonActionPath));
+        jsonAction = new JSONObject(content);
     }
 
     @After
     public void after() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+        FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
+        }
     }
 
     @Test
     public void createDirectorySuccess() throws Exception {
         // run domain
-        String[] args = {downloadCreateDirectoryAction.toString()};
+        String[] args = {jsonAction.toString()};
         Application.main(args);
 
         // assure directories are ok
-        assertTrue(Files.exists(Paths.get(testsRootDirectory + "test/some_dir_1/some_dir_2/")));
+        assertTrue(Files.exists(Paths.get(testIndividualDirectoryPath.toString(), "some_dir_1/some_dir_2/")));
     }
 
     @Test

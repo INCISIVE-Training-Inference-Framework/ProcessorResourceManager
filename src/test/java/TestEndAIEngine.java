@@ -13,6 +13,7 @@ import org.wiremock.webhooks.Webhooks;
 import platform.PlatformAdapter;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -28,50 +29,56 @@ import static org.wiremock.webhooks.Webhooks.webhook;
 
 
 public class TestEndAIEngine {
+    public static final String EXPERIMENTS_MAIN_NAME = "end_ai_engine";
+
+    public static final Path jsonActionPath = Paths.get("src/test/resources/input_configurations", String.format("%s.json", EXPERIMENTS_MAIN_NAME));
+    public static final Path testsRootDirectoryPath = Paths.get(String.format("src/test/resources/tmp_%s_tests/", EXPERIMENTS_MAIN_NAME));
+    private static final Path testIndividualDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "test");
+    public JSONObject jsonAction;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(options().port(8001).extensions(Webhooks.class), false);
-    public String endAIEngineActionString;
     public ActionEndAIEngine endAIEngineAction;
-    public static String testsRootDirectory = "src/test/resources/tmp_end_ai_engine_tests/";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        if (Files.exists(Paths.get(testsRootDirectory))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory));
+        Files.createDirectory(testsRootDirectoryPath);
     }
 
     @Before
     public void before() throws Exception {
         // create directory for specific test
-        if (Files.exists(Paths.get(testsRootDirectory + "test"))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        if (Files.exists(testIndividualDirectoryPath)) {
+            FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory + "test"));
-
+        Files.createDirectory(testIndividualDirectoryPath);
 
         // load default input json
-        endAIEngineActionString = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/end_ai_engine.json")));
-        List<Action> actions = Action.parseInputActions(new JSONObject(endAIEngineActionString));
+        String content = new String(Files.readAllBytes(jsonActionPath));
+        jsonAction = new JSONObject(content);
+        List<Action> actions = Action.parseInputActions(jsonAction);
         endAIEngineAction = (ActionEndAIEngine) actions.get(0);
     }
 
     @After
     public void after() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+        FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
+        }
     }
 
     @Test
@@ -103,7 +110,7 @@ public class TestEndAIEngine {
         );
 
         // run domain
-        String[] args = {endAIEngineActionString};
+        String[] args = {jsonAction.toString()};
         Application.main(args);
     }
 
@@ -129,7 +136,7 @@ public class TestEndAIEngine {
 
         // run domain
         Exception exception = assertThrows(InternalException.class, () -> {
-            String[] args = {endAIEngineActionString};
+            String[] args = {jsonAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());

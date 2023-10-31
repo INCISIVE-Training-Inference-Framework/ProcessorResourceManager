@@ -11,6 +11,7 @@ import platform.PlatformAdapter;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -22,50 +23,54 @@ import static org.junit.Assert.*;
 import static utils.ZipCompression.zipFile;
 
 public class TestDownloadExternalData {
+    public static final String EXPERIMENTS_MAIN_NAME = "download_external_data";
+
+    public static final Path jsonActionPath = Paths.get("src/test/resources/input_configurations", String.format("%s.json", EXPERIMENTS_MAIN_NAME));
+    public static final Path testsRootDirectoryPath = Paths.get(String.format("src/test/resources/tmp_%s_tests/", EXPERIMENTS_MAIN_NAME));
+    private static final Path testIndividualDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "test");
+    public JSONObject jsonAction;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8000);
-    public JSONObject downloadExternalDataAction;
     public static ByteArrayOutputStream byteArrayOutputStream;
-    public static String testsRootDirectory = "src/test/resources/tmp_download_external_data_tests/";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        if (Files.exists(Paths.get(testsRootDirectory))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
         }
+        Files.createDirectory(testsRootDirectoryPath);
 
         // create dummy zip compressed file
-        Files.createDirectory(Paths.get(testsRootDirectory));
-        Files.createDirectory(Paths.get(testsRootDirectory + "tmp"));
-        Files.createFile(Paths.get(testsRootDirectory + "tmp/image1.png"));
-        Files.createFile(Paths.get(testsRootDirectory + "tmp/image2.png"));
+        Path auxiliaryDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "tmp");
+        Files.createDirectory(auxiliaryDirectoryPath);
+        Files.createFile(Paths.get(auxiliaryDirectoryPath.toString(), "image1.png"));
+        Files.createFile(Paths.get(auxiliaryDirectoryPath.toString(), "image2.png"));
         byteArrayOutputStream = new ByteArrayOutputStream();
-        zipFile(testsRootDirectory + "tmp", byteArrayOutputStream);
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "tmp").toFile());
+        zipFile(auxiliaryDirectoryPath.toString(), byteArrayOutputStream);
+        FileUtils.deleteDirectory(auxiliaryDirectoryPath.toFile());
     }
 
     @Before
     public void before() throws Exception {
         // create directory for specific test
-        if (Files.exists(Paths.get(testsRootDirectory + "test"))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        if (Files.exists(testIndividualDirectoryPath)) {
+            FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory + "test"));
-
+        Files.createDirectory(testIndividualDirectoryPath);
 
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/download_external_data.json")));
-        downloadExternalDataAction = new JSONObject(content);
+        String content = new String(Files.readAllBytes(jsonActionPath));
+        jsonAction = new JSONObject(content);
     }
 
     @After
     public void after() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+        FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
     }
 
     @AfterClass
@@ -74,8 +79,10 @@ public class TestDownloadExternalData {
         if (byteArrayOutputStream != null) byteArrayOutputStream.close();
 
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
+        }
     }
 
     @Test
@@ -89,12 +96,14 @@ public class TestDownloadExternalData {
                 .willReturn(aResponse().withBody(byteArrayOutputStream.toByteArray())));
 
         // run domain
-        String[] args = {downloadExternalDataAction.toString()};
+        String[] args = {jsonAction.toString()};
         Application.main(args);
 
         // assure files are ok
-        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
-        assertEquals(Arrays.asList("tmp", "image1.png", "image2.png"), directoryFiles);
+        List<String> directoryFiles = Utils.listDirectoryFiles(testIndividualDirectoryPath.toString());
+        List<String> expectedDirectoryFiles = Arrays.asList("tmp", "image1.png", "image2.png");
+        expectedDirectoryFiles.sort(null);
+        assertEquals(expectedDirectoryFiles, directoryFiles);
     }
 
 
@@ -109,7 +118,7 @@ public class TestDownloadExternalData {
                 .willReturn(aResponse().withStatus(400).withBody("")));
 
         InternalException exception = assertThrows(InternalException.class, () -> {
-            String[] args = {downloadExternalDataAction.toString()};
+            String[] args = {jsonAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());

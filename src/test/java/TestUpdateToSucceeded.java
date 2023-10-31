@@ -12,6 +12,7 @@ import platform.PlatformAdapter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -23,28 +24,31 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class TestUpdateToSucceeded {
+    public static final String EXPERIMENTS_MAIN_NAME = "update_to_succeeded";
+
+    public static final Path testsRootDirectoryPath = Paths.get(String.format("src/test/resources/tmp_%s_tests/", EXPERIMENTS_MAIN_NAME));
+    private static final Path testIndividualDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "test");
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(options().port(8000), false);
-    public static String testsRootDirectory = "src/test/resources/tmp_update_to_succeeded_tests/";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        if (Files.exists(Paths.get(testsRootDirectory))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory));
+        Files.createDirectory(testsRootDirectoryPath);
 
         // create dummy AI Model
-        Files.createDirectory(Paths.get(testsRootDirectory + "dummy_ai_model"));
-        Files.createFile(Paths.get(testsRootDirectory + "dummy_ai_model/model.pth"));
+        Files.createDirectory(Paths.get(testsRootDirectoryPath.toString(), "dummy_ai_model"));
+        Files.createFile(Paths.get(testsRootDirectoryPath.toString(), "dummy_ai_model", "model.pth"));
 
         // create dummy AI Engine Version user vars
         JSONObject userVarsJson = new JSONObject();
         userVarsJson.put("epochs", 2);
         userVarsJson.put("mode", "birads");
-        try(PrintWriter userVarsFile = new PrintWriter(testsRootDirectory + "dummy_user_vars.json", StandardCharsets.UTF_8)) {
+        try(PrintWriter userVarsFile = new PrintWriter(Paths.get(testsRootDirectoryPath.toString(), "dummy_user_vars.json").toFile(), StandardCharsets.UTF_8)) {
             userVarsFile.println(userVarsJson.toString(4));
         }
 
@@ -56,38 +60,40 @@ public class TestUpdateToSucceeded {
         evaluationMetricsArray.put(evaluationMetric2);
         JSONObject evaluationMetricsJson = new JSONObject();
         evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
-        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "dummy_evaluation_metrics.json", StandardCharsets.UTF_8)) {
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(Paths.get(testsRootDirectoryPath.toString(), "dummy_evaluation_metrics.json").toFile(), StandardCharsets.UTF_8)) {
             evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
         }
 
         // create dummy Generic File
-        Files.createDirectory(Paths.get(testsRootDirectory + "dummy_generic_file"));
-        Files.createFile(Paths.get(testsRootDirectory + "dummy_generic_file/image1.png"));
-        Files.createFile(Paths.get(testsRootDirectory + "dummy_generic_file/image2.png"));
+        Files.createDirectory(Paths.get(testsRootDirectoryPath.toString(), "dummy_generic_file"));
+        Files.createFile(Paths.get(testsRootDirectoryPath.toString(), "dummy_generic_file", "image1.png"));
+        Files.createFile(Paths.get(testsRootDirectoryPath.toString(), "dummy_generic_file", "image2.png"));
     }
 
     @Before
     public void before() throws Exception {
         // create directory for specific test
-        if (Files.exists(Paths.get(testsRootDirectory + "test"))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        if (Files.exists(testIndividualDirectoryPath)) {
+            FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory + "test"));
+        Files.createDirectory(testIndividualDirectoryPath);
     }
 
     @After
     public void after() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+        FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
+        }
     }
 
     @Test
@@ -209,7 +215,7 @@ public class TestUpdateToSucceeded {
         )));
 
         // create dummy Evaluation Metrics
-        Files.createDirectory(Paths.get(testsRootDirectory + "/evaluation_metrics/"));
+        Files.createDirectory(Paths.get(testsRootDirectoryPath.toString(), "evaluation_metrics"));
         JSONObject evaluationMetric1 = new JSONObject("{\"name\": \"accuracy\", \"value\": 0, \"description\": \"dummy description\"}");
         JSONObject evaluationMetric2 = new JSONObject("{\"name\": \"f1-score\", \"value\": 0}");
         JSONObject evaluationMetric3 = new JSONObject("{\"name\": \"f2-score\", \"value\": 0}");
@@ -218,14 +224,14 @@ public class TestUpdateToSucceeded {
         evaluationMetricsArray.put(evaluationMetric2);
         JSONObject evaluationMetricsJson = new JSONObject();
         evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
-        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-1.json", StandardCharsets.UTF_8)) {
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(Paths.get(testsRootDirectoryPath.toString(), "evaluation_metrics", "data-partner-1.json").toFile(), StandardCharsets.UTF_8)) {
             evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
         }
         evaluationMetricsArray = new JSONArray();
         evaluationMetricsArray.put(evaluationMetric3);
         evaluationMetricsJson = new JSONObject();
         evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
-        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-2.json", StandardCharsets.UTF_8)) {
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(Paths.get(testsRootDirectoryPath.toString(), "evaluation_metrics", "data-partner-2.json").toFile(), StandardCharsets.UTF_8)) {
             evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
         }
 
@@ -383,7 +389,7 @@ public class TestUpdateToSucceeded {
         )));
 
         // create dummy Evaluation Metrics
-        Files.createDirectories(Paths.get(testsRootDirectory + "/evaluation_metrics/"));
+        Files.createDirectories(Paths.get(testsRootDirectoryPath.toString(), "evaluation_metrics"));
         JSONObject evaluationMetric1 = new JSONObject("{\"name\": \"accuracy\", \"value\": 0, \"description\": \"dummy description\"}");
         JSONObject evaluationMetric2 = new JSONObject("{\"name\": \"f1-score\", \"value\": 0}");
         JSONObject evaluationMetric3 = new JSONObject("{\"name\": \"f2-score\", \"value\": 0}");
@@ -392,14 +398,14 @@ public class TestUpdateToSucceeded {
         evaluationMetricsArray.put(evaluationMetric2);
         JSONObject evaluationMetricsJson = new JSONObject();
         evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
-        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-1.json", StandardCharsets.UTF_8)) {
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(Paths.get(testsRootDirectoryPath.toString(), "evaluation_metrics", "data-partner-1.json").toFile(), StandardCharsets.UTF_8)) {
             evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
         }
         evaluationMetricsArray = new JSONArray();
         evaluationMetricsArray.put(evaluationMetric3);
         evaluationMetricsJson = new JSONObject();
         evaluationMetricsJson.put("evaluation_metrics", evaluationMetricsArray);
-        try(PrintWriter evaluationMetricsFile = new PrintWriter(testsRootDirectory + "/evaluation_metrics/data-partner-2.json", StandardCharsets.UTF_8)) {
+        try(PrintWriter evaluationMetricsFile = new PrintWriter(Paths.get(testsRootDirectoryPath.toString(), "evaluation_metrics", "data-partner-2.json").toFile(), StandardCharsets.UTF_8)) {
             evaluationMetricsFile.println(evaluationMetricsJson.toString(4));
         }
 

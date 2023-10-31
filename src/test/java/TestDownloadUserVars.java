@@ -21,24 +21,28 @@ import static config.environment.EnvironmentVariable.loadEnvironmentVariables;
 import static org.junit.Assert.*;
 
 public class TestDownloadUserVars {
+    public static final String EXPERIMENTS_MAIN_NAME = "download_user_vars";
+
+    public static final Path jsonActionPath = Paths.get("src/test/resources/input_configurations", String.format("%s.json", EXPERIMENTS_MAIN_NAME));
+    public static final Path testsRootDirectoryPath = Paths.get(String.format("src/test/resources/tmp_%s_tests/", EXPERIMENTS_MAIN_NAME));
+    private static final Path testIndividualDirectoryPath = Paths.get(testsRootDirectoryPath.toString(), "test");
+    public JSONObject jsonAction;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8000);
-    public JSONObject downloadUserVarsAction;
     public static Path configFilePath;
     public static JSONObject configContents;
-    public static String testsRootDirectory = "src/test/resources/tmp_download_user_vars_tests/";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        if (Files.exists(Paths.get(testsRootDirectory))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory));
+        Files.createDirectory(testsRootDirectoryPath);
 
         // create dummy config file
-        configFilePath = Paths.get(testsRootDirectory + "user_vars.json");
+        configFilePath = Paths.get(testsRootDirectoryPath.toString(), "user_vars.json");
         Files.createFile(configFilePath);
         List<String> lines = List.of("{\"test\": \"dummy_json\"}");
         Files.write(configFilePath, lines, StandardCharsets.UTF_8);
@@ -48,30 +52,31 @@ public class TestDownloadUserVars {
     @Before
     public void before() throws Exception {
         // create directory for specific test
-        if (Files.exists(Paths.get(testsRootDirectory + "test"))) {
-            FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-            FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        if (Files.exists(testIndividualDirectoryPath)) {
+            FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
         }
-        Files.createDirectory(Paths.get(testsRootDirectory + "test"));
-
+        Files.createDirectory(testIndividualDirectoryPath);
 
         // load default input json
-        String content = new String(Files.readAllBytes(Paths.get("src/test/resources/input_configurations/download_user_vars.json")));
-        downloadUserVarsAction = new JSONObject(content);
+        String content = new String(Files.readAllBytes(jsonActionPath));
+        jsonAction = new JSONObject(content);
     }
 
     @After
     public void after() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory + "test").toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory + "test").toFile());
+        FileUtils.cleanDirectory(testIndividualDirectoryPath.toFile());
+        FileUtils.deleteDirectory(testIndividualDirectoryPath.toFile());
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
         // clean test environment
-        FileUtils.cleanDirectory(Paths.get(testsRootDirectory).toFile());
-        FileUtils.deleteDirectory(Paths.get(testsRootDirectory).toFile());
+        if (Files.exists(testsRootDirectoryPath)) {
+            FileUtils.cleanDirectory(testsRootDirectoryPath.toFile());
+            FileUtils.deleteDirectory(testsRootDirectoryPath.toFile());
+        }
     }
 
     @Test
@@ -85,15 +90,15 @@ public class TestDownloadUserVars {
                 .willReturn(aResponse().withBody(Files.readAllBytes(configFilePath))));
 
         // run domain
-        String[] args = {downloadUserVarsAction.toString()};
+        String[] args = {jsonAction.toString()};
         Application.main(args);
 
         // assure files are ok
-        List<String> directoryFiles = Utils.listDirectoryFiles(testsRootDirectory + "test");
+        List<String> directoryFiles = Utils.listDirectoryFiles(testIndividualDirectoryPath.toString());
         assertEquals(List.of("user_vars.json"), directoryFiles);
 
         // assure config contents are ok
-        byte[] actualConfigBytes = Files.readAllBytes(Paths.get(testsRootDirectory + "test/user_vars.json"));
+        byte[] actualConfigBytes = Files.readAllBytes(Paths.get(testIndividualDirectoryPath.toString(), "user_vars.json"));
         JSONObject actualConfig = new JSONObject(new String(actualConfigBytes, StandardCharsets.UTF_8));
         assertEquals(configContents.toString(), actualConfig.toString());
     }
@@ -110,7 +115,7 @@ public class TestDownloadUserVars {
                 .willReturn(aResponse().withStatus(400).withBody("")));
 
         InternalException exception = assertThrows(InternalException.class, () -> {
-            String[] args = {downloadUserVarsAction.toString()};
+            String[] args = {jsonAction.toString()};
             Namespace parsedArgs = Application.parseInputArgs(args);
             List<Action> actions = Action.parseInputActions((JSONObject) parsedArgs.get("actions"));
             Map<String, Object> initialConfig = loadEnvironmentVariables(Application.getInitialEnvironmentVariables());
