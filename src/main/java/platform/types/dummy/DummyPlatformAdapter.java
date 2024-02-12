@@ -20,6 +20,9 @@ public class DummyPlatformAdapter implements PlatformAdapter {
     public void downloadUserVars(ActionDownloadUserVars action) throws InternalException {}
 
     @Override
+    public void downloadJSON(ActionDownloadJSON action) throws InternalException {}
+
+    @Override
     public void downloadAIModel(ActionDownloadAIModel action) throws InternalException {}
 
     @Override

@@ -27,6 +27,7 @@ public class Domain {
 
         if (action instanceof ActionDownloadExternalData) this.platform.downloadExternalData((ActionDownloadExternalData) action);
         else if (action instanceof ActionDownloadUserVars) this.platform.downloadUserVars((ActionDownloadUserVars) action);
+        else if (action instanceof ActionDownloadJSON) this.platform.downloadJSON((ActionDownloadJSON) action);
         else if (action instanceof ActionDownloadAIModel) this.platform.downloadAIModel((ActionDownloadAIModel) action);
         else if (action instanceof ActionCreateDirectory) this.platform.createDirectory((ActionCreateDirectory) action);
         else if (action instanceof ActionPingAIEngine) this.platform.pingAIEngine((ActionPingAIEngine) action);

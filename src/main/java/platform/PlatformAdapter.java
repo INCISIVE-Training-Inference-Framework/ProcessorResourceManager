@@ -9,7 +9,10 @@ public interface PlatformAdapter {
 
     void prepareInternalData(ActionPrepareInternalData action) throws InternalException;
 
+    @Deprecated
     void downloadUserVars(ActionDownloadUserVars action) throws InternalException;
+
+    void downloadJSON(ActionDownloadJSON action) throws InternalException;
 
     void downloadAIModel(ActionDownloadAIModel action) throws InternalException;
 

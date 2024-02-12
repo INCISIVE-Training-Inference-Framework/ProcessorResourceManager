@@ -38,6 +38,11 @@ public class IncisivePlatformAdapter implements PlatformAdapter {
     }
 
     @Override
+    public void downloadJSON(ActionDownloadJSON action) throws InternalException {
+        ActionDownloadJSONImplementation.run(action);
+    }
+
+    @Override
     public void downloadAIModel(ActionDownloadAIModel action) throws InternalException {
         ActionDownloadAIModelImplementation.run(action);
     }
