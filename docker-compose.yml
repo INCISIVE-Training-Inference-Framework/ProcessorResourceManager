@@ -1,0 +1,22 @@
+version: "3"
+name: processor-resource-manager
+services:
+  # Platform: Processor Resource Manager
+  processor-resource-manager:
+    build: .
+    image: incisive.azurecr.io/processor-resource-manager:development
+    hostname: processor-resource-manager
+    container_name: processor-resource-manager
+    entrypoint:
+      - sleep
+      - infinity
+    #command:
+      #- '{"actions": [{"name": "create_directory","directory_path": "src/test/resources/tmp_create_directory_tests/test/some_dir_1/some_dir_2"}, { "name": "run_ai_engine", "use_case": "inferencing_from_pretrained_model", "max_iteration_time": 30, "max_initialization_time": 2, "client_host": "ai-engine:3000", "server_host": "ai-engine:3000", "ping_url": "/ping", "run_url": "/run", "callback_url": "/callback" }]}'
+    environment:
+      TZ: Europe/Madrid
+    networks:
+      - incisive
+networks:
+  incisive:
+    name: incisive
+    driver: bridge
