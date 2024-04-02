@@ -3,8 +3,12 @@ name: processor-resource-manager
 services:
   # Platform: Processor Resource Manager
   processor-resource-manager:
-    build: .
-    image: incisive.azurecr.io/processor-resource-manager:development
+    build:
+      context: .
+      tags:
+        - ${DOCKER_REGISTRY}/processor-resource-manager:${PRM_TAG}
+        - ${DOCKER_REGISTRY}/processor-resource-manager:latest
+    image: ${DOCKER_REGISTRY}/processor-resource-manager:${PRM_TAG}
     hostname: processor-resource-manager
     container_name: processor-resource-manager
     entrypoint:
